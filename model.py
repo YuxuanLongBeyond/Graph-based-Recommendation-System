@@ -83,7 +83,7 @@ class GCMC(nn.Module):
             
             score.append(tem)
             
-        score = torch.stack(score), dim = 0
+        return torch.stack(score)
             
 class Loss(nn.Module):
     def __init__(self, all_M):
