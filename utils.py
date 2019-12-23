@@ -40,6 +40,10 @@ def var_to_np(x):
         x = x.cpu()
     return x.data.numpy()
 
+def normalize(M):
+    return (M.T / np.sum(M, axis = 1)).T
+
+
 def create_models():
     '''
     Choose one model from our implementations
@@ -54,6 +58,7 @@ def create_models():
         print('Keeping models on CPU.')
 
     return net
+
 
 
 def loss(all_M):

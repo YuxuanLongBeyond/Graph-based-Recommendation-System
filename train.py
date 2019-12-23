@@ -38,10 +38,17 @@ if __name__ == '__main__':
     user_item_matrix_rating_5 = user_item_matrix[user_item_matrix==5]
     
     
-    all_M = np.stack([user_item_matrix_rating_1, user_item_matrix_rating_2, user_item_matrix_rating_3,
-                         user_item_matrix_rating_4, user_item_matrix_rating_5])
+    all_M_u = []
+    all_M_v = []
+    for i in range(5):
+        M_r = user_item_matrix[user_item_matrix==i]
+        all_M_u.append(utils.normalize(M_r))
+        all_M_v.append(utils.normalize(M_r.T))
     
     
+    all_M_u = np.array(all_M_u).astype(np.float32)
+    all_M_v = np.array(all_M_v).astype(np.float32)
+
     if not os.path.exists('./parameters'):
         os.makedirs('./parameters')  
     weights_name = './parameters/weights'
@@ -54,11 +61,14 @@ if __name__ == '__main__':
     net = utils.create_models()
     net.train() # in train mode
     
-    all_M = utils.np_to_var(all_M)
+    M_rating = utils.np_to_var(user_item_matrix - 1.0)
+    
+    all_M_u = utils.np_to_var(all_M_u)
+    all_M_v = utils.np_to_var(all_M_v)
     
     # create AMSGrad optimizer
     optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay, amsgrad = True)
-    Loss = utils.loss(all_M)
+    Loss = utils.loss(M_rating)
 
     for epoch in range(num_epochs):
         print('Start epoch ', epoch)
