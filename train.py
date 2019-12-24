@@ -76,9 +76,7 @@ if __name__ == '__main__':
     net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, out_dim)
     net.train() # in train mode
-    
-    
-    
+
     # create AMSGrad optimizer
     optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay, amsgrad = True)
     Loss = utils.loss(all_M, mask)

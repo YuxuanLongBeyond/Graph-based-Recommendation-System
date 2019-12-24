@@ -55,7 +55,9 @@ def to_sparse(x):
 
 
 def normalize(M):
-    return (M.T / np.sum(M, axis = 1)).T
+    s = np.sum(M, axis = 1)
+    s[s == 0] = 1
+    return (M.T / s).T
 
 
 def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
