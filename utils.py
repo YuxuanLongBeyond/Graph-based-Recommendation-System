@@ -44,12 +44,23 @@ def normalize(M):
     return (M.T / np.sum(M, axis = 1)).T
 
 
-def create_models():
+def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
+                 side_hidden_dim, side_feature_u, side_feature_v, out_dim, drop_out = 0.0):
     '''
     Choose one model from our implementations
     '''
-    net = model.GCMC(feature_u, feature_v, feature_dim, hidden_dim, side_feature_dim, rate_num, 
-                 all_M, side_hidden_dim, side_feature_u, side_feature_v, out_dim)
+    side_feature_u = np_to_var(side_feature_u)
+    side_feature_v = np_to_var(side_feature_v)
+    
+    all_M_u = np_to_var(all_M_u).to_sparse()
+    all_M_v = np_to_var(all_M_v).to_sparse()
+    
+    feature_u = np_to_var(feature_u).to_sparse()
+    feature_v = np_to_var(feature_v).to_sparse()
+    
+    
+    net = model.GCMC(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
+                 side_hidden_dim, side_feature_u, side_feature_v, out_dim)
 
     if RUN_ON_GPU:
         print('Moving models to GPU.')

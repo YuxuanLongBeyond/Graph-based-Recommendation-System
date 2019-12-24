@@ -12,13 +12,17 @@ import torch.sparse as sp
 
 
 class GCMC(nn.Module):
-    def __init__(self, feature_u, feature_v, feature_dim, hidden_dim, side_feature_u_dim, side_feature_v_dim, rate_num, 
-                 all_M_u, all_M_v, side_hidden_dim, side_feature_u, side_feature_v, out_dim, drop_out):
+    def __init__(self, feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
+                 side_hidden_dim, side_feature_u, side_feature_v, out_dim, drop_out = 0.0):
         super(GCMC, self).__init__()
         ###To Do:
         #### drop out on sparse features
         #### regularization on Q
         #### add batch normalization?
+        #### sparse operations (include sparse inputs)
+        
+        side_feature_u_dim = side_feature_u.shape[1]
+        side_feature_v_dim = side_feature_v.shape[1]
 
         self.feature_u = feature_u
         self.feature_v = feature_v
@@ -98,13 +102,4 @@ class Loss(nn.Module):
     def loss(self, score):
         return self.CE(score.unsqueeze(0), self.M_rating.unsqueeze(0))
             
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+

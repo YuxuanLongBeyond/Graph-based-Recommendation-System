@@ -37,6 +37,17 @@ if __name__ == '__main__':
     # rating 5
     user_item_matrix_rating_5 = user_item_matrix[user_item_matrix==5]
     
+    num_user, num_item = user_item_matrix.shape
+    
+    side_feature_u = np.random.randn(num_user, 10)
+    side_feature_v = np.random.randn(num_item, 20)
+    
+    rate_num = 5
+    I = np.eye(num_user + num_item)
+    feature_u = I[0:num_user, :]
+    feature_v = I[0:num_item, :]
+    feature_dim = num_user + num_item
+
     
     all_M_u = []
     all_M_v = []
@@ -55,16 +66,17 @@ if __name__ == '__main__':
     
     lr = 1e-4
     weight_decay = 1e-5
-    num_epochs = 100
+    num_epochs = 10
+    hidden_dim = 10
+    side_hidden_dim = 10
+    out_dim = 10
     
-    
-    net = utils.create_models()
+    net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
+                 side_hidden_dim, side_feature_u, side_feature_v, out_dim)
     net.train() # in train mode
     
     M_rating = utils.np_to_var(user_item_matrix - 1.0)
-    
-    all_M_u = utils.np_to_var(all_M_u)
-    all_M_v = utils.np_to_var(all_M_v)
+
     
     # create AMSGrad optimizer
     optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay, amsgrad = True)
@@ -73,15 +85,14 @@ if __name__ == '__main__':
     for epoch in range(num_epochs):
         print('Start epoch ', epoch)
         
-
         optimizer.zero_grad()
 
         pred = net.forward()
 
-        
         loss = Loss.loss(pred)
         
         loss.backward()
+        
         optimizer.step()
         
         epoch_loss = loss.data.item()
