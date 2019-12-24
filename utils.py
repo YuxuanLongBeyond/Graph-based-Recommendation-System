@@ -24,21 +24,35 @@ if RUN_ON_GPU:
 
 
 def np_to_var(x):
-    '''
+    """
     Convert numpy array to Torch variable.
-    '''
+    """
+    x = torch.from_numpy(x)
     if RUN_ON_GPU:
         x = x.cuda()
     return Variable(x)
 
 
 def var_to_np(x):
-    '''
+    """
     Convert Torch variable to numpy array.
-    '''
+    """
     if RUN_ON_GPU:
         x = x.cpu()
     return x.data.numpy()
+
+def to_sparse(x):
+    """ converts dense tensor x to sparse format """
+    x_typename = torch.typename(x).split('.')[-1]
+    sparse_tensortype = getattr(torch.sparse, x_typename)
+
+    indices = torch.nonzero(x)
+    if len(indices.shape) == 0:  # if all elements are zeros
+        return sparse_tensortype(*x.shape)
+    indices = indices.t()
+    values = x[tuple(indices[i] for i in range(indices.shape[0]))]
+    return sparse_tensortype(indices, values, x.size())
+
 
 def normalize(M):
     return (M.T / np.sum(M, axis = 1)).T
@@ -46,17 +60,18 @@ def normalize(M):
 
 def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, out_dim, drop_out = 0.0):
-    '''
+    """
     Choose one model from our implementations
-    '''
-    side_feature_u = np_to_var(side_feature_u)
-    side_feature_v = np_to_var(side_feature_v)
+    """
+    side_feature_u = np_to_var(side_feature_u.astype(np.float32))
+    side_feature_v = np_to_var(side_feature_v.astype(np.float32))
     
-    all_M_u = np_to_var(all_M_u).to_sparse()
-    all_M_v = np_to_var(all_M_v).to_sparse()
+    for i in range(rate_num):
+        all_M_u[i] = to_sparse(np_to_var(all_M_u[i].astype(np.float32)))
+        all_M_v[i] = to_sparse(np_to_var(all_M_v[i].astype(np.float32)))
     
-    feature_u = np_to_var(feature_u).to_sparse()
-    feature_v = np_to_var(feature_v).to_sparse()
+    feature_u = to_sparse(np_to_var(feature_u.astype(np.float32)))
+    feature_v = to_sparse(np_to_var(feature_v.astype(np.float32)))
     
     
     net = model.GCMC(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
@@ -72,5 +87,7 @@ def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M
 
 
 
-def loss(all_M):
-    return model.Loss(all_M)
+def loss(all_M, mask):
+    all_M = np_to_var(all_M.astype(np.float32))
+    
+    return model.Loss(all_M, mask)

@@ -27,15 +27,15 @@ if __name__ == '__main__':
     user_item_matrix = np.load('./processed_dataset/user_item_matrix.npy')
     
     # rating 1
-    user_item_matrix_rating_1 = user_item_matrix[user_item_matrix==1]
+    user_item_matrix_rating_1 = user_item_matrix==1
     # rating 2
-    user_item_matrix_rating_2 = user_item_matrix[user_item_matrix==2]
+    user_item_matrix_rating_2 = user_item_matrix==2
     # rating 3
-    user_item_matrix_rating_3 = user_item_matrix[user_item_matrix==3]
+    user_item_matrix_rating_3 = user_item_matrix==3
     # rating 4
-    user_item_matrix_rating_4 = user_item_matrix[user_item_matrix==4]
+    user_item_matrix_rating_4 = user_item_matrix==4
     # rating 5
-    user_item_matrix_rating_5 = user_item_matrix[user_item_matrix==5]
+    user_item_matrix_rating_5 = user_item_matrix==5
     
     num_user, num_item = user_item_matrix.shape
     
@@ -51,14 +51,16 @@ if __name__ == '__main__':
     
     all_M_u = []
     all_M_v = []
+    all_M = []
     for i in range(5):
-        M_r = user_item_matrix[user_item_matrix==i]
+        M_r = user_item_matrix==i
         all_M_u.append(utils.normalize(M_r))
         all_M_v.append(utils.normalize(M_r.T))
+        
+        all_M.append(M_r)
     
-    
-    all_M_u = np.array(all_M_u).astype(np.float32)
-    all_M_v = np.array(all_M_v).astype(np.float32)
+    all_M = np.array(all_M)
+    mask = user_item_matrix > 0
 
     if not os.path.exists('./parameters'):
         os.makedirs('./parameters')  
@@ -75,12 +77,11 @@ if __name__ == '__main__':
                  side_hidden_dim, side_feature_u, side_feature_v, out_dim)
     net.train() # in train mode
     
-    M_rating = utils.np_to_var(user_item_matrix - 1.0)
-
+    
     
     # create AMSGrad optimizer
     optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay, amsgrad = True)
-    Loss = utils.loss(M_rating)
+    Loss = utils.loss(all_M, mask)
 
     for epoch in range(num_epochs):
         print('Start epoch ', epoch)
