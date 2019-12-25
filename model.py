@@ -18,8 +18,7 @@ class GCMC(nn.Module):
         ###To Do:
         #### drop out on sparse features
         #### regularization on Q
-        #### add batch normalization?
-        #### sparse operations (include sparse inputs)
+        #### add batch normalization after sparse?
         
         side_feature_u_dim = side_feature_u.shape[1]
         side_feature_v_dim = side_feature_v.shape[1]
@@ -38,11 +37,16 @@ class GCMC(nn.Module):
         
         self.reLU = nn.ReLU()
         
-        self.linear_layer_side_u = nn.Linear(side_feature_u_dim, side_hidden_dim, bias = True)
-        self.linear_layer_side_v = nn.Linear(side_feature_v_dim, side_hidden_dim, bias = True)
+        self.linear_layer_side_u = nn.Sequential(*[nn.Linear(side_feature_u_dim, side_hidden_dim, bias = True), 
+                                                   nn.ReLU(), nn.BatchNorm1d(side_hidden_dim)])
+        self.linear_layer_side_v = nn.Sequential(*[nn.Linear(side_feature_v_dim, side_hidden_dim, bias = True), 
+                                                   nn.ReLU(), nn.BatchNorm1d(side_hidden_dim)])
+    
         
-        self.linear_cat_u = nn.Linear(rate_num * hidden_dim + side_hidden_dim, out_dim, bias = False)
-        self.linear_cat_v = nn.Linear(rate_num * hidden_dim + side_hidden_dim, out_dim, bias = False)
+        self.linear_cat_u = nn.Sequential(*[nn.Linear(rate_num * hidden_dim + side_hidden_dim, out_dim, bias = False), 
+                                            nn.ReLU(), nn.BatchNorm1d(out_dim)])
+        self.linear_cat_v = nn.Sequential(*[nn.Linear(rate_num * hidden_dim + side_hidden_dim, out_dim, bias = False), 
+                                            nn.ReLU(), nn.BatchNorm1d(out_dim)])
         
         self.Q = nn.Parameter(torch.randn(rate_num, out_dim, out_dim))
         
@@ -66,18 +70,19 @@ class GCMC(nn.Module):
             
             hidden_feature_u.append(hidden_u)
             hidden_feature_v.append(hidden_v)
+            
         hidden_feature_u = torch.cat(hidden_feature_u, dim = 1)
         hidden_feature_v = torch.cat(hidden_feature_v, dim = 1)
         
         
-        side_hidden_feature_u = self.reLU(self.linear_layer_side_u(self.side_feature_u))
-        side_hidden_feature_v = self.reLU(self.linear_layer_side_v(self.side_feature_v))
+        side_hidden_feature_u = self.linear_layer_side_u(self.side_feature_u)
+        side_hidden_feature_v = self.linear_layer_side_v(self.side_feature_v)
 
         cat_u = torch.cat((hidden_feature_u, side_hidden_feature_u), dim = 1)
         cat_v = torch.cat((hidden_feature_v, side_hidden_feature_v), dim = 1)
         
-        embed_u = self.reLU(self.linear_cat_u(cat_u))
-        embed_v = self.reLU(self.linear_cat_v(cat_v))
+        embed_u = self.linear_cat_u(cat_u)
+        embed_v = self.linear_cat_v(cat_v)
         
         score = []
         Q_list = torch.split(self.Q, self.rate_num)
@@ -91,12 +96,12 @@ class GCMC(nn.Module):
         return torch.stack(score)
             
 class Loss(nn.Module):
-    def __init__(self, all_M, mask, epsilon = 1e-6):
+    def __init__(self, all_M, num, epsilon = 1e-6):
             
         super(Loss, self).__init__()
             
         self.all_M = all_M
-        self.num = float(mask.sum())
+        self.num = num
         self.epsilon = epsilon
     def loss(self, score):
         
@@ -105,14 +110,5 @@ class Loss(nn.Module):
         l = torch.sum(-self.all_M * torch.log(score))
         return l / self.num
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-            
+
 

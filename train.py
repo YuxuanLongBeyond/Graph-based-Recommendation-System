@@ -52,7 +52,7 @@ if __name__ == '__main__':
     all_M_u = []
     all_M_v = []
     all_M = []
-    for i in range(5):
+    for i in range(rate_num):
         M_r = user_item_matrix==i
         all_M_u.append(utils.normalize(M_r))
         all_M_v.append(utils.normalize(M_r.T))
@@ -66,12 +66,12 @@ if __name__ == '__main__':
         os.makedirs('./parameters')  
     weights_name = './parameters/weights'
     
-    lr = 1e-4
+    lr = 1e-2 # 1e-2
     weight_decay = 1e-5
-    num_epochs = 10
-    hidden_dim = 10
-    side_hidden_dim = 10
-    out_dim = 10
+    num_epochs = 1000 # 1000
+    hidden_dim = 100 # 100
+    side_hidden_dim = 10 # 10
+    out_dim = 75 # 75
     
     net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, out_dim)
