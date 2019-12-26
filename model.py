@@ -50,6 +50,8 @@ class GCMC(nn.Module):
         
         self.Q = nn.Parameter(torch.randn(rate_num, out_dim, out_dim))
         
+        
+        
     def forward(self):
         hidden_feature_u = []
         hidden_feature_v = []
@@ -96,18 +98,17 @@ class GCMC(nn.Module):
         return torch.stack(score)
             
 class Loss(nn.Module):
-    def __init__(self, all_M, num, epsilon = 1e-6):
+    def __init__(self, all_M, num):
             
         super(Loss, self).__init__()
             
         self.all_M = all_M
         self.num = num
-        self.epsilon = epsilon
+        self.logsm = nn.LogSoftmax(dim = 0)
+        
     def loss(self, score):
         
-        score = torch.clamp(score, min = self.epsilon)
-        
-        l = torch.sum(-self.all_M * torch.log(score))
+        l = torch.sum(-self.all_M * self.logsm(score))
         return l / self.num
         
 
