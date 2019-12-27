@@ -53,7 +53,7 @@ if __name__ == '__main__':
     all_M_v = []
     all_M = []
     for i in range(rate_num):
-        M_r = user_item_matrix==i
+        M_r = user_item_matrix== (i + 1)
         all_M_u.append(utils.normalize(M_r))
         all_M_v.append(utils.normalize(M_r.T))
         
