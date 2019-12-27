@@ -74,8 +74,7 @@ def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M
     
     feature_u = to_sparse(np_to_var(feature_u.astype(np.float32)))
     feature_v = to_sparse(np_to_var(feature_v.astype(np.float32)))
-    
-    
+
     net = model.GCMC(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, out_dim)
 

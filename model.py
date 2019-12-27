@@ -18,7 +18,6 @@ class GCMC(nn.Module):
         ###To Do:
         #### drop out on sparse features
         #### regularization on Q
-        #### add batch normalization after sparse?
         
         side_feature_u_dim = side_feature_u.shape[1]
         side_feature_v_dim = side_feature_v.shape[1]
@@ -47,6 +46,7 @@ class GCMC(nn.Module):
                                             nn.ReLU(), nn.BatchNorm1d(out_dim)])
         self.linear_cat_v = nn.Sequential(*[nn.Linear(rate_num * hidden_dim + side_hidden_dim, out_dim, bias = False), 
                                             nn.ReLU(), nn.BatchNorm1d(out_dim)])
+
         
         self.Q = nn.Parameter(torch.randn(rate_num, out_dim, out_dim))
         
@@ -94,7 +94,6 @@ class GCMC(nn.Module):
             tem = torch.mm(torch.mm(embed_u, Qr), torch.t(embed_v))
             
             score.append(tem)
-            
         return torch.stack(score)
             
 class Loss(nn.Module):

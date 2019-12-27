@@ -45,7 +45,7 @@ if __name__ == '__main__':
     rate_num = 5
     I = np.eye(num_user + num_item)
     feature_u = I[0:num_user, :]
-    feature_v = I[0:num_item, :]
+    feature_v = I[num_user:, :]
     feature_dim = num_user + num_item
 
     
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     all_M_v = []
     all_M = []
     for i in range(rate_num):
-        M_r = user_item_matrix== (i + 1)
+        M_r = user_item_matrix == (i + 1)
         all_M_u.append(utils.normalize(M_r))
         all_M_v.append(utils.normalize(M_r.T))
         
@@ -93,7 +93,7 @@ if __name__ == '__main__':
         loss.backward()
         
         optimizer.step()
-        
+
         epoch_loss = loss.data.item()
         print('Loss: ', epoch_loss)
 
