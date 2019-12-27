@@ -66,12 +66,12 @@ if __name__ == '__main__':
         os.makedirs('./parameters')  
     weights_name = './parameters/weights'
     
-    lr = 1e-2 # 1e-2
+    lr = 1e-3 # 1e-2
     weight_decay = 1e-5
     num_epochs = 1000 # 1000
-    hidden_dim = 100 # 100
+    hidden_dim = 10 # 100
     side_hidden_dim = 10 # 10
-    out_dim = 75 # 75
+    out_dim = 20 # 75
     
     net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, out_dim)

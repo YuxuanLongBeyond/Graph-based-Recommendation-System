@@ -63,11 +63,11 @@ class GCMC(nn.Module):
             M_u = self.all_M_u[i]
             M_v = self.all_M_v[i]
             hidden_u = sp.mm(self.feature_v, Wr)
-            hidden_u = self.reLU(sp.mm(M_u, hidden_u))
+            hidden_u = sp.mm(M_u, hidden_u)
             
             ### need to further process M, normalization
             hidden_v = sp.mm(self.feature_u, Wr)
-            hidden_v = self.reLU(sp.mm(M_v, hidden_v))
+            hidden_v = sp.mm(M_v, hidden_v)
 
             
             hidden_feature_u.append(hidden_u)
