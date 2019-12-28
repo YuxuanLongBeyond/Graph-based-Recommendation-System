@@ -88,7 +88,9 @@ def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M
 
 
 
-def loss(all_M, mask):
+def loss(all_M, mask, user_item_matrix):
     all_M = np_to_var(all_M.astype(np.float32))
-    num = float(mask.sum())
-    return model.Loss(all_M, num)
+    mask = np_to_var(mask.astype(np.float32))
+    user_item_matrix = np_to_var(user_item_matrix.astype(np.float32))
+    
+    return model.Loss(all_M, mask, user_item_matrix)

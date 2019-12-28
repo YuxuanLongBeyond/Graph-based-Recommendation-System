@@ -69,9 +69,9 @@ if __name__ == '__main__':
     lr = 1e-2 # 1e-2
     weight_decay = 1e-5
     num_epochs = 1000 # 1000
-    hidden_dim = 100 # 100
+    hidden_dim = 10 # 100
     side_hidden_dim = 10 # 10
-    out_dim = 75 # 75
+    out_dim = 20 # 75
     
     net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, out_dim)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     # create AMSGrad optimizer
     optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay, amsgrad = True)
-    Loss = utils.loss(all_M, mask)
+    Loss = utils.loss(all_M, mask, user_item_matrix)
 
     for epoch in range(num_epochs):
         print('Start epoch ', epoch)
