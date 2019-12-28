@@ -39,22 +39,18 @@ class GCMC(nn.Module):
         
         self.reLU = nn.ReLU()
         
-        side_feature_u_dim = hidden_dim
-        side_feature_v_dim = hidden_dim
         
-        self.linear_layer_side_u = nn.Sequential(*[nn.Linear(side_feature_u_dim, side_hidden_dim, bias = True), 
-                                                   nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
-        self.linear_layer_side_v = nn.Sequential(*[nn.Linear(side_feature_v_dim, side_hidden_dim, bias = True), 
-                                                   nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
+#        self.linear_layer_u = nn.Sequential(*[nn.Linear(hidden_dim * rate_num, side_hidden_dim, bias = True), 
+#                                                   nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
+#        self.linear_layer_v = nn.Sequential(*[nn.Linear(hidden_dim * rate_num, side_hidden_dim, bias = True), 
+#                                                   nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
     
-        self.conv1 = nn.Sequential(*[nn.Conv2d(5, 1, kernel_size = 1, padding = 0), nn.ReLU()])
-    
-        self.linear_cat_u = nn.Sequential(*[nn.Linear(rate_num * hidden_dim + side_hidden_dim, out_dim, bias = False), 
+        self.linear_cat_u = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
                                             nn.BatchNorm1d(out_dim), nn.ReLU()])
-        self.linear_cat_v = nn.Sequential(*[nn.Linear(rate_num * hidden_dim + side_hidden_dim, out_dim, bias = False), 
+        self.linear_cat_v = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
                                             nn.BatchNorm1d(out_dim), nn.ReLU()])
 
-        
+    
         self.Q = nn.Parameter(torch.randn(rate_num, out_dim, out_dim))
         nn.init.orthogonal_(self.Q)
         
@@ -64,7 +60,7 @@ class GCMC(nn.Module):
         hidden_feature_v = []
         
         W_list = torch.split(self.W, self.rate_num)
-        
+        W_flat = []
         for i in range(self.rate_num):
             Wr = W_list[0][i]
             M_u = self.all_M_u[i]
@@ -80,20 +76,21 @@ class GCMC(nn.Module):
             hidden_feature_u.append(hidden_u)
             hidden_feature_v.append(hidden_v)
             
+            W_flat.append(Wr)
+            
         hidden_feature_u = torch.cat(hidden_feature_u, dim = 1)
         hidden_feature_v = torch.cat(hidden_feature_v, dim = 1)
+        W_flat = torch.cat(W_flat, dim = 1)
         
-        feature_pro = self.conv1(torch.unsqueeze(self.W, 0))
-        feature_pro = torch.squeeze(feature_pro)
         
-        side_hidden_feature_u = self.linear_layer_side_u(torch.mm(self.feature_u, feature_pro))
-        side_hidden_feature_v = self.linear_layer_side_v(torch.mm(self.feature_v, feature_pro))
+#        W_hidden_feature_u = self.linear_layer_u(torch.mm(self.feature_u, W_flat))
+#        W_hidden_feature_v = self.linear_layer_v(torch.mm(self.feature_v, W_flat))
         
 #        side_hidden_feature_u = self.linear_layer_side_u(self.side_feature_u)
 #        side_hidden_feature_v = self.linear_layer_side_v(self.side_feature_v)
 
-        cat_u = torch.cat((hidden_feature_u, side_hidden_feature_u), dim = 1)
-        cat_v = torch.cat((hidden_feature_v, side_hidden_feature_v), dim = 1)
+        cat_u = torch.cat((hidden_feature_u, torch.mm(self.feature_u, W_flat)), dim = 1)
+        cat_v = torch.cat((hidden_feature_v, torch.mm(self.feature_v, W_flat)), dim = 1)
         
         embed_u = self.linear_cat_u(cat_u)
         embed_v = self.linear_cat_v(cat_v)

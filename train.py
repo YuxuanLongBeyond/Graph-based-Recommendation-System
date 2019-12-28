@@ -75,8 +75,8 @@ if __name__ == '__main__':
     lr = 1e-3 # 1e-2
     weight_decay = 1e-5
     num_epochs = 2000 # 1000
-    hidden_dim = 20 # 100
-    side_hidden_dim = 20 # 10
+    hidden_dim = 100 # 100
+    side_hidden_dim = 100 # 10
     out_dim = 75 # 75
     
     net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     Loss = utils.loss(all_M, mask, user_item_matrix)
 
     for epoch in range(num_epochs):
-        print('Start epoch ', epoch)
+        
         
         optimizer.zero_grad()
 
@@ -100,8 +100,10 @@ if __name__ == '__main__':
         
         optimizer.step()
 
-        epoch_loss = loss.data.item()
-        print('Loss: ', epoch_loss)
+        if epoch % 100 == 0:
+            print('Start epoch ', epoch)
+            epoch_loss = loss.data.item()
+            print('Loss: ', epoch_loss)
 
         
     torch.save(net.state_dict(), weights_name)
