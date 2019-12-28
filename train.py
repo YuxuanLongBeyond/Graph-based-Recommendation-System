@@ -78,9 +78,9 @@ if __name__ == '__main__':
     lr = 1e-3 # 1e-2
     weight_decay = 1e-5
     num_epochs = 1000 # 1000
-    hidden_dim = 50 # 100
-    side_hidden_dim = 20 # 10
-    out_dim = 75 # 75
+    hidden_dim = 5 # 100
+    side_hidden_dim = 5 # 10
+    out_dim = 5 # 75
     
     net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim)
@@ -139,6 +139,4 @@ if __name__ == '__main__':
     mse = square_err.sum() / test_mask.sum()
     test_rmse = np.sqrt(mse)
     print('Test RMSE: ', test_rmse)
-#        square_err = torch.pow(total_score * self.mask - self.user_item_matrix, 2)
-#        mse = torch.sum(square_err) / self.num
-#        return torch.sqrt(mse)    
+
