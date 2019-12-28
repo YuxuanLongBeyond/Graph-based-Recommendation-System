@@ -10,6 +10,12 @@ import torch
 import torch.nn as nn
 import torch.sparse as sp
 
+
+def sparse_drop(feature, drop_out):
+    tem = torch.rand((feature._nnz()))
+    feature._values()[tem < drop_out] = 0
+    return feature
+
 class GCMC(nn.Module):
     def __init__(self, feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim, drop_out = 0.0):
@@ -17,6 +23,8 @@ class GCMC(nn.Module):
         ###To Do:
         #### drop out on sparse features
         #### regularization on Q
+        
+        self.drop_out = drop_out
         
         side_feature_u_dim = side_feature_u.shape[1]
         side_feature_v_dim = side_feature_v.shape[1]
@@ -67,6 +75,10 @@ class GCMC(nn.Module):
         
         
     def forward(self):
+        
+        feature_u_drop = sparse_drop(self.feature_u, self.drop_out)
+        feature_v_drop = sparse_drop(self.feature_v, self.drop_out)
+        
         hidden_feature_u = []
         hidden_feature_v = []
         
@@ -76,12 +88,12 @@ class GCMC(nn.Module):
             Wr = W_list[0][i]
             M_u = self.all_M_u[i]
             M_v = self.all_M_v[i]
-            hidden_u = torch.mm(self.feature_v, Wr)
-            hidden_u = self.reLU(torch.mm(M_u, hidden_u))
+            hidden_u = sp.mm(feature_v_drop, Wr)
+            hidden_u = self.reLU(sp.mm(M_u, hidden_u) / (1.0 - self.drop_out))
             
             ### need to further process M, normalization
-            hidden_v = torch.mm(self.feature_u, Wr)
-            hidden_v = self.reLU(torch.mm(M_v, hidden_v))
+            hidden_v = sp.mm(feature_u_drop, Wr)
+            hidden_v = self.reLU(sp.mm(M_v, hidden_v) / (1.0 - self.drop_out))
 
             
             hidden_feature_u.append(hidden_u)
@@ -92,11 +104,6 @@ class GCMC(nn.Module):
         hidden_feature_u = torch.cat(hidden_feature_u, dim = 1)
         hidden_feature_v = torch.cat(hidden_feature_v, dim = 1)
         W_flat = torch.cat(W_flat, dim = 1)
-        
-        
-#        W_hidden_feature_u = self.linear_layer_u(torch.mm(self.feature_u, W_flat))
-#        W_hidden_feature_v = self.linear_layer_v(torch.mm(self.feature_v, W_flat))
-        
 
 
         cat_u = torch.cat((hidden_feature_u, torch.mm(self.feature_u, W_flat)), dim = 1)
