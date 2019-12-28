@@ -25,24 +25,30 @@ class GCMC(nn.Module):
         self.feature_v = feature_v
         self.rate_num = rate_num
         
+        self.num_user = feature_u.shape[0]
+        self.num_item = feature_v.shape[1]
+        
         self.side_feature_u = side_feature_u
         self.side_feature_v = side_feature_v
         
         self.W = nn.Parameter(torch.randn(rate_num, feature_dim, hidden_dim))
         nn.init.kaiming_normal_(self.W, mode = 'fan_out', nonlinearity = 'relu')
-#        nn.init.constant_(self.W, 0.0)
         
         self.all_M_u = all_M_u
         self.all_M_v = all_M_v
         
         self.reLU = nn.ReLU()
         
+        side_feature_u_dim = hidden_dim
+        side_feature_v_dim = hidden_dim
+        
         self.linear_layer_side_u = nn.Sequential(*[nn.Linear(side_feature_u_dim, side_hidden_dim, bias = True), 
                                                    nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
         self.linear_layer_side_v = nn.Sequential(*[nn.Linear(side_feature_v_dim, side_hidden_dim, bias = True), 
                                                    nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
     
-        
+        self.conv1 = nn.Sequential(*[nn.Conv2d(5, 1, kernel_size = 1, padding = 0), nn.ReLU()])
+    
         self.linear_cat_u = nn.Sequential(*[nn.Linear(rate_num * hidden_dim + side_hidden_dim, out_dim, bias = False), 
                                             nn.BatchNorm1d(out_dim), nn.ReLU()])
         self.linear_cat_v = nn.Sequential(*[nn.Linear(rate_num * hidden_dim + side_hidden_dim, out_dim, bias = False), 
@@ -77,9 +83,14 @@ class GCMC(nn.Module):
         hidden_feature_u = torch.cat(hidden_feature_u, dim = 1)
         hidden_feature_v = torch.cat(hidden_feature_v, dim = 1)
         
+        feature_pro = self.conv1(torch.unsqueeze(self.W, 0))
+        feature_pro = torch.squeeze(feature_pro)
         
-        side_hidden_feature_u = self.linear_layer_side_u(self.side_feature_u)
-        side_hidden_feature_v = self.linear_layer_side_v(self.side_feature_v)
+        side_hidden_feature_u = self.linear_layer_side_u(torch.mm(self.feature_u, feature_pro))
+        side_hidden_feature_v = self.linear_layer_side_v(torch.mm(self.feature_v, feature_pro))
+        
+#        side_hidden_feature_u = self.linear_layer_side_u(self.side_feature_u)
+#        side_hidden_feature_v = self.linear_layer_side_v(self.side_feature_v)
 
         cat_u = torch.cat((hidden_feature_u, side_hidden_feature_u), dim = 1)
         cat_v = torch.cat((hidden_feature_v, side_hidden_feature_v), dim = 1)

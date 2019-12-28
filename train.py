@@ -75,9 +75,9 @@ if __name__ == '__main__':
     lr = 1e-3 # 1e-2
     weight_decay = 1e-5
     num_epochs = 2000 # 1000
-    hidden_dim = 10 # 100
-    side_hidden_dim = 10 # 10
-    out_dim = 20 # 75
+    hidden_dim = 20 # 100
+    side_hidden_dim = 20 # 10
+    out_dim = 75 # 75
     
     net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, out_dim)
