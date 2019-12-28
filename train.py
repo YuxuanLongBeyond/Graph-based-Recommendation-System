@@ -72,7 +72,7 @@ if __name__ == '__main__':
         os.makedirs('./parameters')  
     weights_name = './parameters/weights'
     
-    save_period = 100
+    save_period = 1
     use_side = False
     
     lr = 1e-3 # 1e-2
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     # create AMSGrad optimizer
     optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay, amsgrad = True)
-    Loss = utils.loss(all_M, mask, user_item_matrix)
+    Loss = utils.loss(all_M, mask, user_item_matrix_train)
 
     for epoch in range(num_epochs):
         

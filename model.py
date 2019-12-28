@@ -143,8 +143,7 @@ class Loss(nn.Module):
         return l / self.num
     
     def rmse(self, score):
-        score = self.sm(score)
-        score_list = torch.split(score, self.rate_num)
+        score_list = torch.split(self.sm(score), self.rate_num)
         total_score = 0
         for i in range(self.rate_num):
             total_score += (i + 1) * score_list[0][i]
