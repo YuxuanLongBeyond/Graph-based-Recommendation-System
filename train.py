@@ -43,12 +43,18 @@ if __name__ == '__main__':
     side_feature_v = np.random.randn(num_item, 20)
     
     rate_num = 5
+
+    feature_dim = num_user + num_item
+
     I = np.eye(num_user + num_item)
     feature_u = I[0:num_user, :]
     feature_v = I[num_user:, :]
-    feature_dim = num_user + num_item
-
     
+#    feature_dim = 10 + 20
+#    
+#    feature_u = np.concatenate((side_feature_u, np.zeros((num_user, 20))), axis = 1)
+#    feature_v = np.concatenate((np.zeros((num_item, 10)), side_feature_v), axis = 1)
+#    
     all_M_u = []
     all_M_v = []
     all_M = []
@@ -66,9 +72,9 @@ if __name__ == '__main__':
         os.makedirs('./parameters')  
     weights_name = './parameters/weights'
     
-    lr = 1e-2 # 1e-2
+    lr = 1e-3 # 1e-2
     weight_decay = 1e-5
-    num_epochs = 1000 # 1000
+    num_epochs = 2000 # 1000
     hidden_dim = 10 # 100
     side_hidden_dim = 10 # 10
     out_dim = 20 # 75

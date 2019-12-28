@@ -69,11 +69,15 @@ def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M
     side_feature_v = np_to_var(side_feature_v.astype(np.float32))
     
     for i in range(rate_num):
-        all_M_u[i] = to_sparse(np_to_var(all_M_u[i].astype(np.float32)))
-        all_M_v[i] = to_sparse(np_to_var(all_M_v[i].astype(np.float32)))
+#        all_M_u[i] = to_sparse(np_to_var(all_M_u[i].astype(np.float32)))
+#        all_M_v[i] = to_sparse(np_to_var(all_M_v[i].astype(np.float32)))
+        all_M_u[i] = np_to_var(all_M_u[i].astype(np.float32))
+        all_M_v[i] = np_to_var(all_M_v[i].astype(np.float32))   
     
-    feature_u = to_sparse(np_to_var(feature_u.astype(np.float32)))
-    feature_v = to_sparse(np_to_var(feature_v.astype(np.float32)))
+#    feature_u = to_sparse(np_to_var(feature_u.astype(np.float32)))
+#    feature_v = to_sparse(np_to_var(feature_v.astype(np.float32)))
+    feature_u = np_to_var(feature_u.astype(np.float32))
+    feature_v = np_to_var(feature_v.astype(np.float32))
 
     net = model.GCMC(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, out_dim)

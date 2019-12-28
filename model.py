@@ -30,6 +30,7 @@ class GCMC(nn.Module):
         
         self.W = nn.Parameter(torch.randn(rate_num, feature_dim, hidden_dim))
         nn.init.kaiming_normal_(self.W, mode = 'fan_out', nonlinearity = 'relu')
+#        nn.init.constant_(self.W, 0.0)
         
         self.all_M_u = all_M_u
         self.all_M_v = all_M_v
@@ -62,12 +63,12 @@ class GCMC(nn.Module):
             Wr = W_list[0][i]
             M_u = self.all_M_u[i]
             M_v = self.all_M_v[i]
-            hidden_u = sp.mm(self.feature_v, Wr)
-            hidden_u = self.reLU(sp.mm(M_u, hidden_u))
+            hidden_u = torch.mm(self.feature_v, Wr)
+            hidden_u = self.reLU(torch.mm(M_u, hidden_u))
             
             ### need to further process M, normalization
-            hidden_v = sp.mm(self.feature_u, Wr)
-            hidden_v = self.reLU(sp.mm(M_v, hidden_v))
+            hidden_v = torch.mm(self.feature_u, Wr)
+            hidden_v = self.reLU(torch.mm(M_v, hidden_v))
 
             
             hidden_feature_u.append(hidden_u)
