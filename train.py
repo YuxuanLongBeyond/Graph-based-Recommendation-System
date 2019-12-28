@@ -75,7 +75,7 @@ if __name__ == '__main__':
     save_period = 1
     use_side = False
     
-    lr = 1e-3 # 1e-2
+    lr = 1e-2 # 1e-2
     weight_decay = 1e-5
     num_epochs = 1000 # 1000
     hidden_dim = 5 # 100
