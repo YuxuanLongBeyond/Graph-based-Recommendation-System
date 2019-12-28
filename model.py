@@ -45,11 +45,15 @@ class GCMC(nn.Module):
 #        self.linear_layer_v = nn.Sequential(*[nn.Linear(hidden_dim * rate_num, side_hidden_dim, bias = True), 
 #                                                   nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
     
-        self.linear_cat_u = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
+        self.linear_cat_u1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
                                             nn.BatchNorm1d(out_dim), nn.ReLU()])
-        self.linear_cat_v = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
+        self.linear_cat_v1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
                                             nn.BatchNorm1d(out_dim), nn.ReLU()])
 
+        self.linear_cat_u2 = nn.Sequential(*[nn.Linear(out_dim, out_dim, bias = True), 
+                                            nn.BatchNorm1d(out_dim), nn.ReLU()])
+        self.linear_cat_v2 = nn.Sequential(*[nn.Linear(out_dim, out_dim, bias = True), 
+                                            nn.BatchNorm1d(out_dim), nn.ReLU()])
     
         self.Q = nn.Parameter(torch.randn(rate_num, out_dim, out_dim))
         nn.init.orthogonal_(self.Q)
@@ -92,8 +96,8 @@ class GCMC(nn.Module):
         cat_u = torch.cat((hidden_feature_u, torch.mm(self.feature_u, W_flat)), dim = 1)
         cat_v = torch.cat((hidden_feature_v, torch.mm(self.feature_v, W_flat)), dim = 1)
         
-        embed_u = self.linear_cat_u(cat_u)
-        embed_v = self.linear_cat_v(cat_v)
+        embed_u = self.linear_cat_u2(self.linear_cat_u1(cat_u))
+        embed_v = self.linear_cat_u2(self.linear_cat_v1(cat_v))
         
         score = []
         Q_list = torch.split(self.Q, self.rate_num)
