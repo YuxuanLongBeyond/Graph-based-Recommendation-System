@@ -76,8 +76,8 @@ class GCMC(nn.Module):
         
     def forward(self):
         
-        feature_u_drop = sparse_drop(self.feature_u, self.drop_out)
-        feature_v_drop = sparse_drop(self.feature_v, self.drop_out)
+        feature_u_drop = sparse_drop(self.feature_u, self.drop_out) / (1.0 - self.drop_out)
+        feature_v_drop = sparse_drop(self.feature_v, self.drop_out) / (1.0 - self.drop_out)
         
         hidden_feature_u = []
         hidden_feature_v = []
@@ -89,11 +89,11 @@ class GCMC(nn.Module):
             M_u = self.all_M_u[i]
             M_v = self.all_M_v[i]
             hidden_u = sp.mm(feature_v_drop, Wr)
-            hidden_u = self.reLU(sp.mm(M_u, hidden_u) / (1.0 - self.drop_out))
+            hidden_u = self.reLU(sp.mm(M_u, hidden_u))
             
             ### need to further process M, normalization
             hidden_v = sp.mm(feature_u_drop, Wr)
-            hidden_v = self.reLU(sp.mm(M_v, hidden_v) / (1.0 - self.drop_out))
+            hidden_v = self.reLU(sp.mm(M_v, hidden_v))
 
             
             hidden_feature_u.append(hidden_u)
