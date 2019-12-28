@@ -46,21 +46,21 @@ class GCMC(nn.Module):
             self.linear_layer_side_v = nn.Sequential(*[nn.Linear(side_feature_v_dim, side_hidden_dim, bias = True), 
                                                        nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
     
-            self.linear_cat_u1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2 + side_hidden_dim, out_dim, bias = True), 
+            self.linear_cat_u = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2 + side_hidden_dim, out_dim, bias = True), 
                                                 nn.BatchNorm1d(out_dim), nn.ReLU()])
-            self.linear_cat_v1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2 + side_hidden_dim, out_dim, bias = True), 
+            self.linear_cat_v = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2 + side_hidden_dim, out_dim, bias = True), 
                                                 nn.BatchNorm1d(out_dim), nn.ReLU()])    
         else:
             
-            self.linear_cat_u1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
+            self.linear_cat_u = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
                                                 nn.BatchNorm1d(out_dim), nn.ReLU()])
-            self.linear_cat_v1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
+            self.linear_cat_v = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
                                                 nn.BatchNorm1d(out_dim), nn.ReLU()])
 
-        self.linear_cat_u2 = nn.Sequential(*[nn.Linear(out_dim, out_dim, bias = True), 
-                                            nn.BatchNorm1d(out_dim), nn.ReLU()])
-        self.linear_cat_v2 = nn.Sequential(*[nn.Linear(out_dim, out_dim, bias = True), 
-                                            nn.BatchNorm1d(out_dim), nn.ReLU()])
+#        self.linear_cat_u2 = nn.Sequential(*[nn.Linear(out_dim, out_dim, bias = True), 
+#                                            nn.BatchNorm1d(out_dim), nn.ReLU()])
+#        self.linear_cat_v2 = nn.Sequential(*[nn.Linear(out_dim, out_dim, bias = True), 
+#                                            nn.BatchNorm1d(out_dim), nn.ReLU()])
     
         self.Q = nn.Parameter(torch.randn(rate_num, out_dim, out_dim))
         nn.init.orthogonal_(self.Q)
@@ -110,8 +110,8 @@ class GCMC(nn.Module):
             cat_v = torch.cat((cat_v, side_hidden_feature_v), dim = 1)
         
         
-        embed_u = self.linear_cat_u2(self.linear_cat_u1(cat_u))
-        embed_v = self.linear_cat_v2(self.linear_cat_v1(cat_v))
+        embed_u = self.linear_cat_u(cat_u)
+        embed_v = self.linear_cat_v(cat_v)
         
         score = []
         Q_list = torch.split(self.Q, self.rate_num)
@@ -136,12 +136,14 @@ class Loss(nn.Module):
         self.num = float(mask.sum())
         
         self.logsm = nn.LogSoftmax(dim = 0)
+        self.sm = nn.Softmax(dim = 0)
         
     def cross_entropy(self, score):
         l = torch.sum(-self.all_M * self.logsm(score))
         return l / self.num
     
     def rmse(self, score):
+        score = self.sm(score)
         score_list = torch.split(score, self.rate_num)
         total_score = 0
         for i in range(self.rate_num):
