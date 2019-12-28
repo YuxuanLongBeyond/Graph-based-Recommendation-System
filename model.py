@@ -9,7 +9,6 @@ Created on Thu Nov 28 17:02:15 2019
 import torch
 import torch.nn as nn
 import torch.sparse as sp
-import numpy as np
 
 class GCMC(nn.Module):
     def __init__(self, feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
@@ -30,6 +29,7 @@ class GCMC(nn.Module):
         self.side_feature_v = side_feature_v
         
         self.W = nn.Parameter(torch.randn(rate_num, feature_dim, hidden_dim))
+        nn.init.kaiming_normal_(self.W, mode = 'fan_out', nonlinearity = 'relu')
         
         self.all_M_u = all_M_u
         self.all_M_v = all_M_v
@@ -49,7 +49,7 @@ class GCMC(nn.Module):
 
         
         self.Q = nn.Parameter(torch.randn(rate_num, out_dim, out_dim))
-        
+        nn.init.orthogonal_(self.Q)
         
         
     def forward(self):
@@ -63,11 +63,11 @@ class GCMC(nn.Module):
             M_u = self.all_M_u[i]
             M_v = self.all_M_v[i]
             hidden_u = sp.mm(self.feature_v, Wr)
-            hidden_u = sp.mm(M_u, hidden_u)
+            hidden_u = self.reLU(sp.mm(M_u, hidden_u))
             
             ### need to further process M, normalization
             hidden_v = sp.mm(self.feature_u, Wr)
-            hidden_v = sp.mm(M_v, hidden_v)
+            hidden_v = self.reLU(sp.mm(M_v, hidden_v))
 
             
             hidden_feature_u.append(hidden_u)
