@@ -72,14 +72,14 @@ if __name__ == '__main__':
         os.makedirs('./parameters')  
     weights_name = './parameters/weights'
     
-    save_period = 1
+    save_period = 100
     use_side = False
     
     lr = 1e-2 # 1e-2
     weight_decay = 1e-5
     num_epochs = 1000 # 1000
     hidden_dim = 5 # 100
-    side_hidden_dim = 5 # 10
+    side_hidden_dim = 10 # 10
     out_dim = 5 # 75
     
     net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     net.train() # in train mode
 
     # create AMSGrad optimizer
-    optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay, amsgrad = True)
+    optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay)
     Loss = utils.loss(all_M, mask, user_item_matrix_train)
 
     for epoch in range(num_epochs):
@@ -132,11 +132,9 @@ if __name__ == '__main__':
     np.save('./prediction.npy', pred)
     
     ### test
-    
     test_mask = user_item_matrix_test > 0
     
     square_err = (pred * test_mask - user_item_matrix_test) ** 2
     mse = square_err.sum() / test_mask.sum()
     test_rmse = np.sqrt(mse)
     print('Test RMSE: ', test_rmse)
-
