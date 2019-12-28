@@ -12,7 +12,7 @@ import torch.sparse as sp
 
 class GCMC(nn.Module):
     def __init__(self, feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
-                 side_hidden_dim, side_feature_u, side_feature_v, out_dim, drop_out = 0.0):
+                 side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim, drop_out = 0.0):
         super(GCMC, self).__init__()
         ###To Do:
         #### drop out on sparse features
@@ -20,6 +20,7 @@ class GCMC(nn.Module):
         
         side_feature_u_dim = side_feature_u.shape[1]
         side_feature_v_dim = side_feature_v.shape[1]
+        self.use_side = use_side
 
         self.feature_u = feature_u
         self.feature_v = feature_v
@@ -39,16 +40,22 @@ class GCMC(nn.Module):
         
         self.reLU = nn.ReLU()
         
-        
-#        self.linear_layer_u = nn.Sequential(*[nn.Linear(hidden_dim * rate_num, side_hidden_dim, bias = True), 
-#                                                   nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
-#        self.linear_layer_v = nn.Sequential(*[nn.Linear(hidden_dim * rate_num, side_hidden_dim, bias = True), 
-#                                                   nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
+        if use_side:
+            self.linear_layer_side_u = nn.Sequential(*[nn.Linear(side_feature_u_dim, side_hidden_dim, bias = True), 
+                                                       nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
+            self.linear_layer_side_v = nn.Sequential(*[nn.Linear(side_feature_v_dim, side_hidden_dim, bias = True), 
+                                                       nn.BatchNorm1d(side_hidden_dim), nn.ReLU()])
     
-        self.linear_cat_u1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
-                                            nn.BatchNorm1d(out_dim), nn.ReLU()])
-        self.linear_cat_v1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
-                                            nn.BatchNorm1d(out_dim), nn.ReLU()])
+            self.linear_cat_u1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2 + side_hidden_dim, out_dim, bias = True), 
+                                                nn.BatchNorm1d(out_dim), nn.ReLU()])
+            self.linear_cat_v1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2 + side_hidden_dim, out_dim, bias = True), 
+                                                nn.BatchNorm1d(out_dim), nn.ReLU()])    
+        else:
+            
+            self.linear_cat_u1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
+                                                nn.BatchNorm1d(out_dim), nn.ReLU()])
+            self.linear_cat_v1 = nn.Sequential(*[nn.Linear(rate_num * hidden_dim * 2, out_dim, bias = True), 
+                                                nn.BatchNorm1d(out_dim), nn.ReLU()])
 
         self.linear_cat_u2 = nn.Sequential(*[nn.Linear(out_dim, out_dim, bias = True), 
                                             nn.BatchNorm1d(out_dim), nn.ReLU()])
@@ -90,14 +97,21 @@ class GCMC(nn.Module):
 #        W_hidden_feature_u = self.linear_layer_u(torch.mm(self.feature_u, W_flat))
 #        W_hidden_feature_v = self.linear_layer_v(torch.mm(self.feature_v, W_flat))
         
-#        side_hidden_feature_u = self.linear_layer_side_u(self.side_feature_u)
-#        side_hidden_feature_v = self.linear_layer_side_v(self.side_feature_v)
+
 
         cat_u = torch.cat((hidden_feature_u, torch.mm(self.feature_u, W_flat)), dim = 1)
         cat_v = torch.cat((hidden_feature_v, torch.mm(self.feature_v, W_flat)), dim = 1)
         
+        if self.use_side:
+            side_hidden_feature_u = self.linear_layer_side_u(self.side_feature_u)
+            side_hidden_feature_v = self.linear_layer_side_v(self.side_feature_v)    
+            
+            cat_u = torch.cat((cat_u, side_hidden_feature_u), dim = 1)
+            cat_v = torch.cat((cat_v, side_hidden_feature_v), dim = 1)
+        
+        
         embed_u = self.linear_cat_u2(self.linear_cat_u1(cat_u))
-        embed_v = self.linear_cat_u2(self.linear_cat_v1(cat_v))
+        embed_v = self.linear_cat_v2(self.linear_cat_v1(cat_v))
         
         score = []
         Q_list = torch.split(self.Q, self.rate_num)
