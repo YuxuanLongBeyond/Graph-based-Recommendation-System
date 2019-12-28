@@ -82,8 +82,10 @@ if __name__ == '__main__':
     side_hidden_dim = 10 # 10
     out_dim = 5 # 75
     
+    drop_out = 0.2
+    
     net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
-                 side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim)
+                 side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim, drop_out)
     net.train() # in train mode
 
     # create AMSGrad optimizer

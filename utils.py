@@ -80,7 +80,7 @@ def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M
 #    feature_v = np_to_var(feature_v.astype(np.float32))
 
     net = model.GCMC(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
-                 side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim)
+                 side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim, drop_out)
 
     if RUN_ON_GPU:
         print('Moving models to GPU.')
