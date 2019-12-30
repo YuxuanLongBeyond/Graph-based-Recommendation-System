@@ -12,6 +12,30 @@ import utils
 import torch.optim as optim
 import torch.nn as nn
 import os
+import fire
+import argparse
+
+
+
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--train_flag', type=bool, default=True, help='training flag')
+parser.add_argument('--test_flag', type=bool, default=True, help='test flag')
+parser.add_argument('--rate_num', type=int, default=5, help='todo')
+parser.add_argument('--use_side_feature', type=bool, default=False, help='using side feature')
+parser.add_argument('--lr', type=float, default=1e-2, help='learning rate')
+parser.add_argument('--weight_decay', type=float, default=1e-5, help='weight decay rate')
+parser.add_argument('--num_epochs', type=int, default=1000, help='number of training epochs')
+parser.add_argument('--hidden_dim', type=int, default=5, help='hidden dimension')
+parser.add_argument('--side_hidden_dim', type=int, default=5, help='side hidden dimension')
+parser.add_argument('--out_dim', type=int, default=5, help='output dimension')
+parser.add_argument('--drop_out', type=float, default=0.0, help='dropout ratio')
+parser.add_argument('--split_ratio', type=float, default=0.8, help='split ratio for training set')
+parser.add_argument('--save_steps', type=int, default=100, help='every #steps to save the model')
+parser.add_argument('--verbal_steps', type=int, default=5, help='every #steps to print ')
+
+args = parser.parse_args()
+
+
 
 # Run on GPU if CUDA is available
 RUN_ON_GPU = torch.cuda.is_available()
@@ -39,22 +63,44 @@ def data_whitening(x, epsilon = 1e-9):
     return M, mean
 
 
-if __name__ == '__main__':
-    train_flag = True
-    test_flag = True
+def main(args):
     
-    rate_num = 5
-    use_side = False
-    lr = 1e-2 # 1e-2
-    weight_decay = 1e-5
-    num_epochs = 1000 # 1000
-    hidden_dim = 5 # 100
-    side_hidden_dim = 5 # 10
-    out_dim = 5 # 75
-    drop_out = 0.0
-    split_ratio = 0.8
-    save_period = 100
-    verbal_period = 100
+
+    
+    train_flag = args.train_flag
+    test_flag = args.test_flag
+    
+    rate_num = args.rate_num
+    use_side_feature = args.use_side_feature
+    lr = args.lr
+    weight_decay = args.weight_decay
+    num_epochs = args.num_epochs
+    hidden_dim = args.hidden_dim
+    side_hidden_dim = args.side_hidden_dim
+    out_dim = args.out_dim
+    drop_out = args.drop_out
+    split_ratio = args.split_ratio
+    save_steps = args.save_steps
+    verbal_steps = args.verbal_steps
+    
+    
+    
+    
+#     train_flag = True
+#     test_flag = True
+    
+#     rate_num = 5
+#     use_side = False
+#     lr = 1e-2 # 1e-2
+#     weight_decay = 1e-5
+#     num_epochs = 1000 # 1000
+#     hidden_dim = 5 # 100
+#     side_hidden_dim = 5 # 10
+#     out_dim = 5 # 75
+#     drop_out = 0.0
+#     split_ratio = 0.8
+#     save_period = 100
+#     verbal_period = 100
     
     ### Rating matrix loading, processing, split
     user_item_matrix = np.load('./processed_dataset/user_item_matrix.npy')
@@ -105,7 +151,7 @@ if __name__ == '__main__':
         
     
         net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
-                     side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim, drop_out)
+                     side_hidden_dim, side_feature_u, side_feature_v, use_side_feature, out_dim, drop_out)
         net.train() # in train mode
     
         # create AMSGrad optimizer
@@ -126,12 +172,12 @@ if __name__ == '__main__':
     #        print('Loss: ', loss.data.item())
             
             
-            if epoch % verbal_period == 0:
+            if epoch % verbal_steps == 0:
                 print('Start epoch ', epoch)
                 epoch_loss = loss.data.item()
                 print('Loss: ', epoch_loss)
                 
-            if epoch % save_period == 0:
+            if epoch % save_steps == 0:
                 with torch.no_grad():
                     rmse = Loss.rmse(score)
                     print('Training RMSE: ', rmse.data.item())        
@@ -162,3 +208,7 @@ if __name__ == '__main__':
         mse = square_err.sum() / test_mask.sum()
         test_rmse = np.sqrt(mse)
         print('Test RMSE: ', test_rmse)
+
+if __name__ == '__main__':
+    args = parser.parse_args()
+    main(args)
