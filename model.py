@@ -21,7 +21,6 @@ class GCMC(nn.Module):
                  side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim, drop_out = 0.0):
         super(GCMC, self).__init__()
         ###To Do:
-        #### drop out on sparse features
         #### regularization on Q
         
         self.drop_out = drop_out
