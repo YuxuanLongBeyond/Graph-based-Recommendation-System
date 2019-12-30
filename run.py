@@ -14,14 +14,18 @@ import torch.nn as nn
 import os
 import fire
 import argparse
-
-
+from tqdm import tqdm
+from tensorboardX import SummaryWriter
+import time
+import sys
+import os 
+import json
 
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--train_flag', type=bool, default=True, help='training flag')
-parser.add_argument('--test_flag', type=bool, default=True, help='test flag')
+parser.add_argument('--train_flag', default=0, type=int, help='training flag')
+parser.add_argument('--test_flag', default=0, type=int, help='test flag')
 parser.add_argument('--rate_num', type=int, default=5, help='todo')
-parser.add_argument('--use_side_feature', type=bool, default=False, help='using side feature')
+parser.add_argument('--use_side_feature', default=0, type=int, help='using side feature')
 parser.add_argument('--lr', type=float, default=1e-2, help='learning rate')
 parser.add_argument('--weight_decay', type=float, default=1e-5, help='weight decay rate')
 parser.add_argument('--num_epochs', type=int, default=1000, help='number of training epochs')
@@ -32,6 +36,9 @@ parser.add_argument('--drop_out', type=float, default=0.0, help='dropout ratio')
 parser.add_argument('--split_ratio', type=float, default=0.8, help='split ratio for training set')
 parser.add_argument('--save_steps', type=int, default=100, help='every #steps to save the model')
 parser.add_argument('--verbal_steps', type=int, default=5, help='every #steps to print ')
+parser.add_argument('--log_dir', help='folder to save log')
+parser.add_argument('--saved_model_folder', help='folder to save model')
+parser.add_argument('--use_data_whitening', default=0, type=int, help='data whitening')
 
 args = parser.parse_args()
 
@@ -65,11 +72,8 @@ def data_whitening(x, epsilon = 1e-9):
 
 def main(args):
     
-
-    
     train_flag = args.train_flag
     test_flag = args.test_flag
-    
     rate_num = args.rate_num
     use_side_feature = args.use_side_feature
     lr = args.lr
@@ -82,25 +86,16 @@ def main(args):
     split_ratio = args.split_ratio
     save_steps = args.save_steps
     verbal_steps = args.verbal_steps
+    log_dir = args.log_dir
+    saved_model_folder =  args.saved_model_folder
+    use_data_whitening = args.use_data_whitening
     
-    
-    
-    
-#     train_flag = True
-#     test_flag = True
-    
-#     rate_num = 5
-#     use_side = False
-#     lr = 1e-2 # 1e-2
-#     weight_decay = 1e-5
-#     num_epochs = 1000 # 1000
-#     hidden_dim = 5 # 100
-#     side_hidden_dim = 5 # 10
-#     out_dim = 5 # 75
-#     drop_out = 0.0
-#     split_ratio = 0.8
-#     save_period = 100
-#     verbal_period = 100
+    post_fix = '/' + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
+    log_dir = log_dir + post_fix
+    writer = SummaryWriter(log_dir=log_dir)
+    f = open(log_dir + '/test.txt', 'a')
+    f.write(str(vars(args)))
+    f.close()
     
     ### Rating matrix loading, processing, split
     user_item_matrix = np.load('./processed_dataset/user_item_matrix.npy')
@@ -131,12 +126,18 @@ def main(args):
     raw_side_feature_u = np.load('./processed_dataset/user_data_np.npy', allow_pickle = True)
     raw_side_feature_v = np.load('./processed_dataset/item_data_np.npy', allow_pickle = True)
     
-    M_u, mean_u = data_whitening(raw_side_feature_u)
-    M_v, mean_v = data_whitening(raw_side_feature_v)
+    if use_data_whitening:
+        print("Using data whitening!")
     
-    side_feature_u = np.dot(raw_side_feature_u - mean_u, M_u)
-    side_feature_v = np.dot(raw_side_feature_v - mean_v, M_v)
-    
+        M_u, mean_u = data_whitening(raw_side_feature_u)
+        M_v, mean_v = data_whitening(raw_side_feature_v)
+        side_feature_u = np.dot(raw_side_feature_u - mean_u, M_u)
+        side_feature_v = np.dot(raw_side_feature_v - mean_v, M_v)
+        
+    else:
+        print("Not using data whitening!")
+        side_feature_u = raw_side_feature_u
+        side_feature_v = raw_side_feature_v
     
     ### input feature generation
     feature_dim = num_user + num_item
@@ -144,10 +145,13 @@ def main(args):
     feature_u = I[0:num_user, :]
     feature_v = I[num_user:, :]
     
+#     print("test here")
+#     print(train_flag == True)
+    
     if train_flag:
-        if not os.path.exists('./parameters'):
-            os.makedirs('./parameters')  
-        weights_name = './parameters/weights'
+        if not os.path.exists(saved_model_folder):
+            os.makedirs(saved_model_folder)  
+        weights_name = saved_model_folder + post_fix + '_weights'
         
     
         net = utils.create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
@@ -157,8 +161,9 @@ def main(args):
         # create AMSGrad optimizer
         optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay)
         Loss = utils.loss(all_M, mask, user_item_matrix_train)
-    
-        for epoch in range(num_epochs):
+#         iter_bar = tqdm(self.data_iter, desc='Iter (loss=X.XXX)')
+        iter_bar = tqdm(range(num_epochs), desc='Iter (loss=X.XXX)')
+        for epoch in iter_bar:
             
             optimizer.zero_grad()
     
@@ -169,20 +174,15 @@ def main(args):
             loss.backward()
             
             optimizer.step()
-    #        print('Loss: ', loss.data.item())
             
-            
-            if epoch % verbal_steps == 0:
-                print('Start epoch ', epoch)
-                epoch_loss = loss.data.item()
-                print('Loss: ', epoch_loss)
+            with torch.no_grad():
+                rmse = Loss.rmse(score)
+                iter_bar.set_description('Iter (loss=%5.3f, rmse=%5.3f)'%(loss.item(),rmse.item()))
                 
+            writer.add_scalars('data/scalar_group',{'loss': loss.item(), 'rmse': rmse.item()},epoch)
+                                                    
             if epoch % save_steps == 0:
-                with torch.no_grad():
-                    rmse = Loss.rmse(score)
-                    print('Training RMSE: ', rmse.data.item())        
-                                    
-                    torch.save(net.state_dict(), weights_name)
+                torch.save(net.state_dict(), weights_name)
     
         rmse = Loss.rmse(score)
         print('Final training RMSE: ', rmse.data.item())        
