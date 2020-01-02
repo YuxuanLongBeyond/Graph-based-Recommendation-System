@@ -10,6 +10,8 @@ import torch
 import torch.nn as nn
 import torch.sparse as sp
 import numpy as np
+import utils
+from loss import Loss
 
 def sparse_drop(feature, drop_out):
     tem = torch.rand((feature._nnz()))
@@ -128,75 +130,8 @@ class GCMC(nn.Module):
             
             score.append(tem)
         return torch.stack(score)
-            
-class Loss(nn.Module):
-    def __init__(self, all_M, mask, user_item_matrix):
-            
-        super(Loss, self).__init__()
-            
-        self.all_M = all_M
-        self.mask = mask
-        self.user_item_matrix = user_item_matrix
-        
-        self.rate_num = all_M.shape[0]
-        self.num = float(mask.sum())
-        
-        self.logsm = nn.LogSoftmax(dim = 0)
-        self.sm = nn.Softmax(dim = 0)
-        
-    def cross_entropy(self, score):
-        l = torch.sum(-self.all_M * self.logsm(score))
-        return l / self.num
     
-    def rmse(self, score):
-        score_list = torch.split(self.sm(score), self.rate_num)
-        total_score = 0
-        for i in range(self.rate_num):
-            total_score += (i + 1) * score_list[0][i]
-        
-        square_err = torch.pow(total_score * self.mask - self.user_item_matrix, 2)
-        mse = torch.sum(square_err) / self.num
-        return torch.sqrt(mse)
-        
-    def loss(self, score):
-        return self.cross_entropy(score) + self.rmse(score)
-    
-def epsilon_similarity_graph(X: np.ndarray, sigma=None, epsilon=0):
-    """ X (n x d): coordinates of the n data points in R^d.
-        sigma (float): width of the kernel
-        epsilon (float): threshold
-        Return:
-        adjacency (n x n ndarray): adjacency matrix of the graph.
-    """
-    # Your code here
-    W = np.array([np.sum((X[i] - X)**2, axis = 1) for i in range(X.shape[0])])
-    typical_dist = np.mean(np.sqrt(W))
-    # print(np.mean(W))
-    c = 0.35
-    if sigma == None:
-        sigma = typical_dist * c
-    
-    mask = W >= epsilon
-    
-    adjacency = np.exp(- W / 2.0 / (sigma ** 2))
-    adjacency[mask] = 0.0
-    adjacency -= np.diag(np.diag(adjacency))
-    return adjacency
 
-def compute_laplacian(adjacency: np.ndarray, normalize: bool):
-    """ Return:
-        L (n x n ndarray): combinatorial or symmetric normalized Laplacian.
-    """
-    # Your code here
-    d = np.sum(adjacency, axis = 1)
-    d_sqrt = np.sqrt(d)  
-    D = np.diag(1 / d_sqrt)
-    if normalize:
-        L = np.eye(adjacency.shape[0]) - (adjacency.T / d_sqrt).T / d_sqrt
-        # L = np.dot(np.dot(D, np.diag(d) - adjacency), D)
-    else:
-        L = np.diag(d) - adjacency
-    return L
         
 
 

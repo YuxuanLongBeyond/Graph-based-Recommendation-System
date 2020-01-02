@@ -19,6 +19,7 @@ import time
 import sys
 import os 
 import json
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--train_flag', default=0, type=int, help='training flag')
@@ -38,6 +39,7 @@ parser.add_argument('--verbal_steps', type=int, default=5, help='every #steps to
 parser.add_argument('--log_dir', help='folder to save log')
 parser.add_argument('--saved_model_folder', help='folder to save model')
 parser.add_argument('--use_data_whitening', default=0, type=int, help='data whitening')
+parser.add_argument('--use_laplacian_loss', default=0, type=int, help='laplacian loss')
 
 args = parser.parse_args()
 
@@ -69,6 +71,45 @@ def data_whitening(x, epsilon = 1e-9):
     return M, mean
 
 
+def epsilon_similarity_graph(X: np.ndarray, sigma=None, epsilon=0):
+    """ X (n x d): coordinates of the n data points in R^d.
+        sigma (float): width of the kernel
+        epsilon (float): threshold
+        Return:
+        adjacency (n x n ndarray): adjacency matrix of the graph.
+    """
+    # Your code here
+    W = np.array([np.sum((X[i] - X)**2, axis = 1) for i in range(X.shape[0])])
+    typical_dist = np.mean(np.sqrt(W))
+    # print(np.mean(W))
+    c = 0.35
+    if sigma == None:
+        sigma = typical_dist * c
+    
+    mask = W >= epsilon
+    
+    adjacency = np.exp(- W / 2.0 / (sigma ** 2))
+    adjacency[mask] = 0.0
+    adjacency -= np.diag(np.diag(adjacency))
+    return adjacency
+
+def compute_laplacian(adjacency: np.ndarray, normalize: bool):
+    """ Return:
+        L (n x n ndarray): combinatorial or symmetric normalized Laplacian.
+    """
+    # Your code here
+    d = np.sum(adjacency, axis = 1)
+    d_sqrt = np.sqrt(d)  
+#     print("d_sqrt {}".format(d_sqrt))
+    D = np.diag(1 / d_sqrt)
+    if normalize:
+        L = np.eye(adjacency.shape[0]) - (adjacency.T / d_sqrt).T / d_sqrt
+        # L = np.dot(np.dot(D, np.diag(d) - adjacency), D)
+    else:
+        L = np.diag(d) - adjacency
+    return L
+
+
 def main(args):
     
     train_flag = args.train_flag
@@ -88,6 +129,7 @@ def main(args):
     log_dir = args.log_dir
     saved_model_folder =  args.saved_model_folder
     use_data_whitening = args.use_data_whitening
+    use_laplacian_loss = args.use_laplacian_loss
     
     post_fix = '/' + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
     log_dir = log_dir + post_fix
@@ -138,6 +180,22 @@ def main(args):
         side_feature_u = raw_side_feature_u
         side_feature_v = raw_side_feature_v
     
+    ############test############
+    
+#     np.save("side_feature_u.npy", side_feature_u)
+#     np.save("side_feature_v.npy", side_feature_v)
+    
+    
+    adjacency_u = epsilon_similarity_graph(side_feature_u, epsilon=1.1)
+    laplacian_u = compute_laplacian(adjacency_u, True)
+    adjacency_v = epsilon_similarity_graph(side_feature_v, epsilon=2.1)
+    laplacian_v = compute_laplacian(adjacency_v, True)
+    
+    laplacian_u = utils.np_to_var(laplacian_u)
+    laplacian_v = utils.np_to_var(laplacian_v)
+#     print(type(laplacian_u))
+    
+    
     ### input feature generation
     feature_dim = num_user + num_item
     I = np.eye(num_user + num_item)
@@ -167,8 +225,11 @@ def main(args):
             optimizer.zero_grad()
     
             score = net.forward()
-    
-            loss = Loss.loss(score)
+        
+            if use_laplacian_loss:
+                loss = Loss.laplacian_loss(score, laplacian_u, laplacian_v)
+            else:
+                 loss = Loss.loss(score)
             
             loss.backward()
             
