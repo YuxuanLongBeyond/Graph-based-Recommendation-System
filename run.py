@@ -12,7 +12,6 @@ import utils
 import torch.optim as optim
 import torch.nn as nn
 import os
-import fire
 import argparse
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
