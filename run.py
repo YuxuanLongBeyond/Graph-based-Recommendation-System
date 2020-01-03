@@ -35,7 +35,6 @@ parser.add_argument('--out_dim', type=int, default=5, help='output dimension')
 parser.add_argument('--drop_out', type=float, default=0.0, help='dropout ratio')
 parser.add_argument('--split_ratio', type=float, default=0.8, help='split ratio for training set')
 parser.add_argument('--save_steps', type=int, default=100, help='every #steps to save the model')
-parser.add_argument('--verbal_steps', type=int, default=5, help='every #steps to print ')
 parser.add_argument('--log_dir', help='folder to save log')
 parser.add_argument('--saved_model_folder', help='folder to save model')
 parser.add_argument('--use_data_whitening', default=0, type=int, help='data whitening')
@@ -126,7 +125,6 @@ def main(args):
     drop_out = args.drop_out
     split_ratio = args.split_ratio
     save_steps = args.save_steps
-    verbal_steps = args.verbal_steps
     log_dir = args.log_dir
     saved_model_folder =  args.saved_model_folder
     use_data_whitening = args.use_data_whitening
@@ -184,14 +182,20 @@ def main(args):
     
     ############test############
     
-#     np.save("side_feature_u.npy", side_feature_u)
-#     np.save("side_feature_v.npy", side_feature_v)
+#     np.save("side_feature_u_whitening.npy", side_feature_u)
+#     np.save("side_feature_v_whitening.npy", side_feature_v)
     
-    
-    adjacency_u = epsilon_similarity_graph(side_feature_u, epsilon=1.1)
-    laplacian_u = compute_laplacian(adjacency_u, True)
-    adjacency_v = epsilon_similarity_graph(side_feature_v, epsilon=2.1)
-    laplacian_v = compute_laplacian(adjacency_v, True)
+    if use_data_whitening:
+        adjacency_u = epsilon_similarity_graph(side_feature_u, epsilon=5.7)
+        laplacian_u = compute_laplacian(adjacency_u, True)
+        adjacency_v = epsilon_similarity_graph(side_feature_v, epsilon=52.5)
+        laplacian_v = compute_laplacian(adjacency_v, True)
+        
+    else:
+        adjacency_u = epsilon_similarity_graph(side_feature_u, epsilon=1.1)
+        laplacian_u = compute_laplacian(adjacency_u, True)
+        adjacency_v = epsilon_similarity_graph(side_feature_v, epsilon=2.1)
+        laplacian_v = compute_laplacian(adjacency_v, True)
     
     laplacian_u = utils.np_to_var(laplacian_u)
     laplacian_v = utils.np_to_var(laplacian_v)

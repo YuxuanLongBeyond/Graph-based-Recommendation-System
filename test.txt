@@ -1,0 +1,11 @@
+Will use 0.001 in the script
+Will use 0.001 in the script
+Not using data whitening!
+Moving models to GPU.
+Final training RMSE:  1.0009392499923706
+Test RMSE:  1.0203869750896626
+Will use 0.005 in the script
+Not using data whitening!
+Moving models to GPU.
+Final training RMSE:  0.9403331875801086
+Test RMSE:  0.9705184267012069
