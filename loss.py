@@ -5,7 +5,7 @@ import numpy as np
 import utils
 
 class Loss(nn.Module):
-    def __init__(self, all_M, mask, user_item_matrix):
+    def __init__(self, all_M, mask, user_item_matrix, laplacian_loss_weight):
             
         super(Loss, self).__init__()
             
@@ -18,6 +18,7 @@ class Loss(nn.Module):
         
         self.logsm = nn.LogSoftmax(dim = 0)
         self.sm = nn.Softmax(dim = 0)
+        self.laplacian_loss_weight = laplacian_loss_weight
         
     def cross_entropy(self, score):
         l = torch.sum(-self.all_M * self.logsm(score))
@@ -49,4 +50,4 @@ class Loss(nn.Module):
         dirichlet_norm_c = torch.trace(dirichlet_c)/torch.max(dirichlet_c)
         
         
-        return dirichlet_norm_r + dirichlet_norm_c + self.loss(score)
+        return self.laplacian_loss_weight*(dirichlet_norm_r + dirichlet_norm_c) + (1-self.laplacian_loss_weight)*self.loss(score)

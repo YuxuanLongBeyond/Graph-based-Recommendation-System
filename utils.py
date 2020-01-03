@@ -10,6 +10,7 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 import model
+from loss import Loss
 
 
 # Run on GPU if CUDA is available
@@ -92,9 +93,9 @@ def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M
 
 
 
-def loss(all_M, mask, user_item_matrix):
+def loss(all_M, mask, user_item_matrix, laplacian_loss_weight):
     all_M = np_to_var(all_M.astype(np.float32))
     mask = np_to_var(mask.astype(np.float32))
     user_item_matrix = np_to_var(user_item_matrix.astype(np.float32))
     
-    return model.Loss(all_M, mask, user_item_matrix)
+    return Loss(all_M, mask, user_item_matrix, laplacian_loss_weight)

@@ -40,6 +40,7 @@ parser.add_argument('--log_dir', help='folder to save log')
 parser.add_argument('--saved_model_folder', help='folder to save model')
 parser.add_argument('--use_data_whitening', default=0, type=int, help='data whitening')
 parser.add_argument('--use_laplacian_loss', default=0, type=int, help='laplacian loss')
+parser.add_argument('--laplacian_loss_weight', default=0.1, type=float, help='laplacian loss weight')
 
 args = parser.parse_args()
 
@@ -130,6 +131,7 @@ def main(args):
     saved_model_folder =  args.saved_model_folder
     use_data_whitening = args.use_data_whitening
     use_laplacian_loss = args.use_laplacian_loss
+    laplacian_loss_weight = args.laplacian_loss_weight
     
     post_fix = '/' + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
     log_dir = log_dir + post_fix
@@ -217,7 +219,7 @@ def main(args):
     
         # create AMSGrad optimizer
         optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay)
-        Loss = utils.loss(all_M, mask, user_item_matrix_train)
+        Loss = utils.loss(all_M, mask, user_item_matrix_train, laplacian_loss_weight)
 #         iter_bar = tqdm(self.data_iter, desc='Iter (loss=X.XXX)')
         iter_bar = tqdm(range(num_epochs), desc='Iter (loss=X.XXX)')
         for epoch in iter_bar:
