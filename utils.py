@@ -71,14 +71,10 @@ def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M
     
     for i in range(rate_num):
         all_M_u[i] = to_sparse(np_to_var(all_M_u[i].astype(np.float32)))
-        all_M_v[i] = to_sparse(np_to_var(all_M_v[i].astype(np.float32)))
-#        all_M_u[i] = np_to_var(all_M_u[i].astype(np.float32))
-#        all_M_v[i] = np_to_var(all_M_v[i].astype(np.float32))   
+        all_M_v[i] = to_sparse(np_to_var(all_M_v[i].astype(np.float32)))   
     
     feature_u = to_sparse(np_to_var(feature_u.astype(np.float32)))
     feature_v = to_sparse(np_to_var(feature_v.astype(np.float32)))
-#    feature_u = np_to_var(feature_u.astype(np.float32))
-#    feature_v = np_to_var(feature_v.astype(np.float32))
 
     net = model.GCMC(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M_u, all_M_v, 
                  side_hidden_dim, side_feature_u, side_feature_v, use_side, out_dim, drop_out)
@@ -91,6 +87,43 @@ def create_models(feature_u, feature_v, feature_dim, hidden_dim, rate_num, all_M
 
     return net
 
+
+def epsilon_similarity_graph(X: np.ndarray, sigma=None, epsilon=0):
+    """ X (n x d): coordinates of the n data points in R^d.
+        sigma (float): width of the kernel
+        epsilon (float): threshold
+        Return:
+        adjacency (n x n ndarray): adjacency matrix of the graph.
+    """
+    # Your code here
+    W = np.array([np.sum((X[i] - X)**2, axis = 1) for i in range(X.shape[0])])
+    typical_dist = np.mean(np.sqrt(W))
+    # print(np.mean(W))
+    c = 0.35
+    if sigma == None:
+        sigma = typical_dist * c
+    
+    mask = W >= epsilon
+    
+    adjacency = np.exp(- W / 2.0 / (sigma ** 2))
+    adjacency[mask] = 0.0
+    adjacency -= np.diag(np.diag(adjacency))
+    return adjacency
+
+def compute_laplacian(adjacency: np.ndarray, normalize: bool):
+    """ Return:
+        L (n x n ndarray): combinatorial or symmetric normalized Laplacian.
+    """
+    # Your code here
+    d = np.sum(adjacency, axis = 1)
+    d_sqrt = np.sqrt(d)  
+    D = np.diag(1 / d_sqrt)
+    if normalize:
+        L = np.eye(adjacency.shape[0]) - (adjacency.T / d_sqrt).T / d_sqrt
+        # L = np.dot(np.dot(D, np.diag(d) - adjacency), D)
+    else:
+        L = np.diag(d) - adjacency
+    return L
 
 
 def loss(all_M, mask, user_item_matrix, laplacian_loss_weight):

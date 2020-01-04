@@ -9,6 +9,7 @@ Created on Mon Dec 23 09:26:33 2019
 import numpy as np
 import torch
 import utils
+from utils import epsilon_similarity_graph, compute_laplacian
 import torch.optim as optim
 import torch.nn as nn
 import os
@@ -19,7 +20,6 @@ import time
 import sys
 import os 
 import json
-import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--train_flag', default=0, type=int, help='training flag')
@@ -70,48 +70,9 @@ def data_whitening(x, epsilon = 1e-9):
     M = np.dot(V / np.sqrt(u + epsilon), V.T)
     return M, mean
 
-
-def epsilon_similarity_graph(X: np.ndarray, sigma=None, epsilon=0):
-    """ X (n x d): coordinates of the n data points in R^d.
-        sigma (float): width of the kernel
-        epsilon (float): threshold
-        Return:
-        adjacency (n x n ndarray): adjacency matrix of the graph.
-    """
-    # Your code here
-    W = np.array([np.sum((X[i] - X)**2, axis = 1) for i in range(X.shape[0])])
-    typical_dist = np.mean(np.sqrt(W))
-    # print(np.mean(W))
-    c = 0.35
-    if sigma == None:
-        sigma = typical_dist * c
-    
-    mask = W >= epsilon
-    
-    adjacency = np.exp(- W / 2.0 / (sigma ** 2))
-    adjacency[mask] = 0.0
-    adjacency -= np.diag(np.diag(adjacency))
-    return adjacency
-
-def compute_laplacian(adjacency: np.ndarray, normalize: bool):
-    """ Return:
-        L (n x n ndarray): combinatorial or symmetric normalized Laplacian.
-    """
-    # Your code here
-    d = np.sum(adjacency, axis = 1)
-    d_sqrt = np.sqrt(d)  
-#     print("d_sqrt {}".format(d_sqrt))
-    D = np.diag(1 / d_sqrt)
-    if normalize:
-        L = np.eye(adjacency.shape[0]) - (adjacency.T / d_sqrt).T / d_sqrt
-        # L = np.dot(np.dot(D, np.diag(d) - adjacency), D)
-    else:
-        L = np.diag(d) - adjacency
-    return L
-
-
 def main(args):
     
+    # get arguments
     train_flag = args.train_flag
     test_flag = args.test_flag
     rate_num = args.rate_num
@@ -131,6 +92,7 @@ def main(args):
     use_laplacian_loss = args.use_laplacian_loss
     laplacian_loss_weight = args.laplacian_loss_weight
     
+    # mark and record the training file, save the training arguments for future analysis
     post_fix = '/' + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
     log_dir = log_dir + post_fix
     writer = SummaryWriter(log_dir=log_dir)
@@ -181,10 +143,7 @@ def main(args):
         side_feature_v = raw_side_feature_v
     
     ############test############
-    
-#     np.save("side_feature_u_whitening.npy", side_feature_u)
-#     np.save("side_feature_v_whitening.npy", side_feature_v)
-    
+        
     if use_data_whitening:
         adjacency_u = epsilon_similarity_graph(side_feature_u, epsilon=5.7)
         laplacian_u = compute_laplacian(adjacency_u, True)
@@ -199,7 +158,6 @@ def main(args):
     
     laplacian_u = utils.np_to_var(laplacian_u)
     laplacian_v = utils.np_to_var(laplacian_v)
-#     print(type(laplacian_u))
     
     
     ### input feature generation
@@ -208,8 +166,6 @@ def main(args):
     feature_u = I[0:num_user, :]
     feature_v = I[num_user:, :]
     
-#     print("test here")
-#     print(train_flag == True)
     
     if train_flag:
         if not os.path.exists(saved_model_folder):
@@ -224,7 +180,6 @@ def main(args):
         # create AMSGrad optimizer
         optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay)
         Loss = utils.loss(all_M, mask, user_item_matrix_train, laplacian_loss_weight)
-#         iter_bar = tqdm(self.data_iter, desc='Iter (loss=X.XXX)')
         iter_bar = tqdm(range(num_epochs), desc='Iter (loss=X.XXX)')
         for epoch in iter_bar:
             
@@ -264,7 +219,7 @@ def main(args):
         pred = utils.var_to_np(pred)
         np.save('./prediction.npy', pred)
     
-    ### test
+    ### test the performance
     if test_flag:
         pred = np.load('./prediction.npy')
         
