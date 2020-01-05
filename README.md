@@ -1,5 +1,4 @@
 # Graph-based-Recommendation-System
-Graph convolutional matrix completion
 	.
 	|-- README.md (here)
 	|-- log (saved tensorboard log file)
