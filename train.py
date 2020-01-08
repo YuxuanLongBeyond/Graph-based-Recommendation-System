@@ -55,20 +55,29 @@ torch.manual_seed(SEED)
 if RUN_ON_GPU:
     torch.cuda.manual_seed(SEED)
 
-def data_whitening(x, epsilon = 1e-9):
-    """
-    Perform ZCA for data whitening on the features.
+def validate(score, rate_num, user_item_matrix_test):
+    sm = nn.Softmax(dim = 0)
+    score = sm(score)
+    score_list = torch.split(score, rate_num)
+    pred = 0
+    for i in range(rate_num):
+        pred += (i + 1) * score_list[0][i]
+
+    pred = utils.var_to_np(pred)
     
-    Return:
-        M       the linear transformation matrix
-        mean    the mean of the feature
-    """
-    mean = np.mean(x, axis = 0)
-    x_norm = x - mean
-    sigma = np.dot(x_norm.T, x_norm) / x.shape[0]
-    u, V = np.linalg.eig(sigma)
-    M = np.dot(V / np.sqrt(u + epsilon), V.T)
-    return M, mean
+#     pred = np.load('./prediction.npy')
+    
+    ### test the performance
+#     user_item_matrix_test = np.load('./processed_dataset/user_item_matrix_test.npy')
+    test_mask = user_item_matrix_test > 0
+
+    square_err = (pred * test_mask - user_item_matrix_test) ** 2
+    mse = square_err.sum() / test_mask.sum()
+    test_rmse = np.sqrt(mse)
+    
+    return test_rmse
+
+
 
 def main(args):
     
@@ -111,57 +120,63 @@ def main(args):
                  side_hidden_dim, side_feature_u, side_feature_v, use_side_feature, out_dim, drop_out)
     net.train() # in train mode
 
-#     # create AMSGrad optimizer
-#     optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay)
-#     Loss = utils.loss(all_M, mask, user_item_matrix_train, laplacian_loss_weight)
-#     iter_bar = tqdm(range(num_epochs), desc='Iter (loss=X.XXX)')
-#     for epoch in iter_bar:
+    # create AMSGrad optimizer
+    optimizer = optim.Adam(net.parameters(), lr = lr, weight_decay = weight_decay)
+    Loss = utils.loss(all_M, mask, user_item_matrix_train, laplacian_loss_weight)
+    iter_bar = tqdm(range(num_epochs), desc='Iter (loss=X.XXX)')
+    for epoch in iter_bar:
 
-#         optimizer.zero_grad()
+        optimizer.zero_grad()
 
-#         score = net.forward()
+        score = net.forward()
 
-#         if use_laplacian_loss:
-#             loss = Loss.laplacian_loss(score, laplacian_u, laplacian_v)
-#         else:
-#              loss = Loss.loss(score)
+        if use_laplacian_loss:
+            loss = Loss.laplacian_loss(score, laplacian_u, laplacian_v)
+        else:
+             loss = Loss.loss(score)
 
-#         loss.backward()
+        loss.backward()
 
-#         optimizer.step()
+        optimizer.step()
 
-#         with torch.no_grad():
-#             rmse = Loss.rmse(score)
-#             iter_bar.set_description('Iter (loss=%5.3f, rmse=%5.3f)'%(loss.item(),rmse.item()))
+        with torch.no_grad():
+            rmse = Loss.rmse(score)
+            
+            val_rmse = validate(score, rate_num, user_item_matrix_test)
+            iter_bar.set_description('Iter (loss=%5.3f, rmse=%5.3f, val_rmse=%5.3f)'%(loss.item(),rmse.item(), val_rmse.item()))
 
-#         writer.add_scalars('data/scalar_group',{'loss': loss.item(), 'rmse': rmse.item()},epoch)
+        writer.add_scalars('data/scalar_group',{'loss': loss.item(), 'rmse': rmse.item(), 'val_rmse':val_rmse.item()},epoch)
 
-#         if epoch % save_steps == 0:
-#             torch.save(net.state_dict(), weights_name)
+        if epoch % save_steps == 0:
+            torch.save(net.state_dict(), weights_name)
 
-#     rmse = Loss.rmse(score)
-#     print('Final training RMSE: ', rmse.data.item())        
-#     torch.save(net.state_dict(), weights_name)
+    rmse = Loss.rmse(score)
+    print('Final training RMSE: ', rmse.data.item())        
+    torch.save(net.state_dict(), weights_name)
 
-#     sm = nn.Softmax(dim = 0)
-#     score = sm(score)
-#     score_list = torch.split(score, rate_num)
-#     pred = 0
-#     for i in range(rate_num):
-#         pred += (i + 1) * score_list[0][i]
-
-#     pred = utils.var_to_np(pred)
     
-    pred = np.load('./prediction.npy')
+    
+    sm = nn.Softmax(dim = 0)
+    score = sm(score)
+    score_list = torch.split(score, rate_num)
+    pred = 0
+    for i in range(rate_num):
+        pred += (i + 1) * score_list[0][i]
+
+    pred = utils.var_to_np(pred)
+    
+#     pred = np.load('./prediction.npy')
     
     ### test the performance
-    user_item_matrix_test = np.load('./processed_dataset/user_item_matrix_test1.npy')
+#     user_item_matrix_test = np.load('./processed_dataset/user_item_matrix_test.npy')
     test_mask = user_item_matrix_test > 0
 
     square_err = (pred * test_mask - user_item_matrix_test) ** 2
     mse = square_err.sum() / test_mask.sum()
     test_rmse = np.sqrt(mse)
     print('Test RMSE: ', test_rmse)
+
+    
 
 if __name__ == '__main__':
     args = parser.parse_args()

@@ -186,3 +186,19 @@ def prepare(args):
     feature_v = I[num_user:, :]
     
     return feature_u, feature_v, feature_dim, all_M_u, all_M_v, side_feature_u, side_feature_v, all_M, mask, user_item_matrix_train, user_item_matrix_test, laplacian_u, laplacian_v
+
+
+def data_whitening(x, epsilon = 1e-9):
+    """
+    Perform ZCA for data whitening on the features.
+    
+    Return:
+        M       the linear transformation matrix
+        mean    the mean of the feature
+    """
+    mean = np.mean(x, axis = 0)
+    x_norm = x - mean
+    sigma = np.dot(x_norm.T, x_norm) / x.shape[0]
+    u, V = np.linalg.eig(sigma)
+    M = np.dot(V / np.sqrt(u + epsilon), V.T)
+    return M, mean
