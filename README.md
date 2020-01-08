@@ -4,10 +4,10 @@
 	|-- README.md (here)
 	|-- log (saved tensorboard log file)
 	|-- ml-100k (dataset)
-	|-- parameters (weights)
+	|-- weights (saved model weights)
 	|-- text (grid search text and ablation study results)
-	|-- dataset.py
-	|-- train.py
+	|-- dataset.py 
+	|-- train.py 
 	|-- model.py
 	|-- utils.py
 	|-- loss.py
@@ -51,7 +51,7 @@ tensorboard --logdir=log/name_of_your_saved_file
 </p>
 
 ## Gridsearch for best hyperparameters by running shell script:
-```console
+The reult(RMSE) will be saved in a **gridsearch.txt** under the text folder.
+```bash
 sh run.sh -lr 0.01 0.02 -epochs 1000 2000 -hidden_dim 3 5 -side_hidden_dim 3 5 -dropout 0 0.1 0.2 -use_side_feature 0 1 -use_data_whitening 0 1 -use_laplacian_loss 0 1 -laplacian_loss_weight 0.05 0.1 | tee -a text/gridsearch.txt
 ```
-The reult(RMSE) will be saved in a **gridsearch.txt** under the text folder.
