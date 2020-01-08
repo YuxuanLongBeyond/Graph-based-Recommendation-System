@@ -14,7 +14,7 @@
 
 ## Guideline to run our code:
 ### STEP 1: install required packages
-pip: pip install -r requirements   
+pip: pip install -r requirements.txt   
 conda: conda env create -f environment. yaml
 
 ### STEP 2: run code
