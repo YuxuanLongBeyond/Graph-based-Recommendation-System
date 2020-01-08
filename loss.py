@@ -46,13 +46,9 @@ class Loss(nn.Module):
         
         dirichlet_r = torch.mm(torch.mm(torch.transpose(total_score,0,1), laplacian_u.to(torch.float)), total_score.to(torch.float))
         dirichlet_c = torch.mm(torch.mm(total_score.to(torch.float),laplacian_v.to(torch.float)),torch.transpose(total_score.to(torch.float),0,1))
-#         dirichlet_norm_r = torch.trace(dirichlet_r)/torch.sum(laplacian_u != 0)
-#         dirichlet_norm_c = torch.trace(dirichlet_c)/torch.max(laplacian_v != 0)
+
         dirichlet_norm_r = torch.trace(dirichlet_r)/(laplacian_u.shape[0] * laplacian_u.shape[1])
         dirichlet_norm_c = torch.trace(dirichlet_c)/(laplacian_v.shape[0] * laplacian_v.shape[1])
         
         
         return self.laplacian_loss_weight*(dirichlet_norm_r + dirichlet_norm_c) + (1-self.laplacian_loss_weight)*self.loss(score)
-    
-#     def pure_loss(self, score):
-#         return self.cross_entropy(score) + self.rmse(score)
