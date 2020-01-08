@@ -107,6 +107,8 @@ def main(args):
     f.write(str(vars(args)))
     f.close()
     
+    print(log_dir)
+    
     #get prepared data
     feature_u, feature_v, feature_dim, all_M_u, all_M_v, side_feature_u, side_feature_v, all_M, mask, user_item_matrix_train, user_item_matrix_test, laplacian_u, laplacian_v = prepare(args)  
     
@@ -143,9 +145,10 @@ def main(args):
             rmse = Loss.rmse(score)
             
             val_rmse = validate(score, rate_num, user_item_matrix_test)
-            iter_bar.set_description('Iter (loss=%5.3f, rmse=%5.3f, val_rmse=%5.3f)'%(loss.item(),rmse.item(), val_rmse.item()))
+            iter_bar.set_description('Iter (loss=%5.3f, rmse=%5.3f, val_rmse=%5.5f)'%(loss.item(),rmse.item(), val_rmse.item()))
 
-        writer.add_scalars('data/scalar_group',{'loss': loss.item(), 'rmse': rmse.item(), 'val_rmse':val_rmse.item()},epoch)
+#             writer.add_scalars('scalar',{'loss': loss.item(), 'rmse': rmse.item(), 'val_rmse':val_rmse.item(),},epoch)
+            writer.add_scalars('scalar',{'loss': loss.item()},epoch)
 
         if epoch % save_steps == 0:
             torch.save(net.state_dict(), weights_name)
