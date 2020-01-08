@@ -14,13 +14,13 @@
 
 ## Guideline to run our code:
 ### STEP 1: install required packages
-```console
+```bash
 pip: pip install -r requirements.txt   
 conda: conda env create -f environment. yaml
-```c
+```
 
 ### STEP 2: run code
-```console
+```bash
 python3 train.py --rate_num 5 \
                 --lr 0.01 \
                 --weight_decay 0.00001 \
@@ -41,7 +41,7 @@ python3 train.py --rate_num 5 \
                 --laplacian_loss_weight 0.05
 ```
 You can observe the loss curve through the training by runing:
-```console
+```bash
 tensorboard --logdir=log/name_of_your_saved_file
 ```
 <p align="center">
