@@ -33,9 +33,6 @@ def preprocess(dataset_path, save_path):
         for i in range(len(set(data["user_id"]))):
             for item_id in data[data['user_id']==i+1]['item_id']:
                 user_item_mat[i, item_id-1] = data[(data['user_id']==i+1) & (data['item_id']==item_id)]['rating']
-        
-
-#     user_item_mat = np.load('./processed_dataset/user_item_matrix.npy')
 
     ############################### Genre of the movies ############################### 
     if os.path.exists(save_path+"/item_data_np.npy"):

@@ -143,6 +143,8 @@ do
                                                         --save_steps 100 \
                                                         --log_dir './log' \
                                                         --saved_model_folder './weights' \
+                                                        --dataset_path './ml-100k' \
+                                                        --save_processed_data_path './data' \
                                                         --use_side_feature $n \
                                                         --use_data_whitening $o \
                                                         --use_laplacian_loss $p \
