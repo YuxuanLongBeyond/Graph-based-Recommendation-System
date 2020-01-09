@@ -131,22 +131,22 @@ do
                                 do
                                 echo "##############################################################################################################################################################"
                                 echo "learning rate:$i epochs:$j hidden_dim:$k side_hidden_dim:$l dropout:$m use_side_feature:$n use_data_whitening:$o use_laplacian_loss:$p laplacian_loss_weight:$q"
-                                python3 train.py --rate_num 5 \
-                                                --lr $i \
-                                                --weight_decay 0.00001 \
-                                                --num_epochs $j \
-                                                --hidden_dim $k \
-                                                --side_hidden_dim $l \
-                                                --out_dim 5 \
-                                                --drop_out $m \
-                                                --split_ratio 0.8 \
-                                                --save_steps 100 \
-                                                --log_dir './log' \
-                                                --saved_model_folder './weights' \
-                                                --use_side_feature $n \
-                                                --use_data_whitening $o \
-                                                --use_laplacian_loss $p \
-                                                --laplacian_loss_weight $q
+                                python3 scripts/train.py --rate_num 5 \
+                                                        --lr $i \
+                                                        --weight_decay 0.00001 \
+                                                        --num_epochs $j \
+                                                        --hidden_dim $k \
+                                                        --side_hidden_dim $l \
+                                                        --out_dim 5 \
+                                                        --drop_out $m \
+                                                        --split_ratio 0.8 \
+                                                        --save_steps 100 \
+                                                        --log_dir './log' \
+                                                        --saved_model_folder './weights' \
+                                                        --use_side_feature $n \
+                                                        --use_data_whitening $o \
+                                                        --use_laplacian_loss $p \
+                                                        --laplacian_loss_weight $q
                                 echo "##############################################################################################################################################################"
                                 done
                             done
