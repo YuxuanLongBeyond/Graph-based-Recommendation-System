@@ -3,11 +3,11 @@
 	.
 	|-- README.md (here)
 	|-- log (saved tensorboard log file)
-	|-- ml-100k (dataset)
+	|-- ml-100k (raw dataset)
 	|-- weights (saved model weights)
 	|-- text (grid search text and ablation study results)
 	|-- data (processed data)
-	|-- Network Visualization.ipynb (Notebook for visualization)
+	|-- Network Visualization.ipynb (Notebook for visualization of graph)
 	|-- scripts
 	  -- run.sh(shell scripts for running gridsearch experiments)
 	  -- dataset.py 
