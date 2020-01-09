@@ -1,5 +1,5 @@
 #!/bin/bash
-export CUDA_VISIBLE_DEVICES=4
+# export CUDA_VISIBLE_DEVICES=4
 
 array_lr=()
 array_epochs=()
@@ -131,9 +131,7 @@ do
                                 do
                                 echo "##############################################################################################################################################################"
                                 echo "learning rate:$i epochs:$j hidden_dim:$k side_hidden_dim:$l dropout:$m use_side_feature:$n use_data_whitening:$o use_laplacian_loss:$p laplacian_loss_weight:$q"
-                                python3 run.py --train_flag 1 \
-                                                --test_flag 1 \
-                                                --rate_num 5 \
+                                python3 train.py --rate_num 5 \
                                                 --lr $i \
                                                 --weight_decay 0.00001 \
                                                 --num_epochs $j \
@@ -144,7 +142,7 @@ do
                                                 --split_ratio 0.8 \
                                                 --save_steps 100 \
                                                 --log_dir './log' \
-                                                --saved_model_folder './parameters' \
+                                                --saved_model_folder './weights' \
                                                 --use_side_feature $n \
                                                 --use_data_whitening $o \
                                                 --use_laplacian_loss $p \
