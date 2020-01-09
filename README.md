@@ -9,7 +9,8 @@
 	|-- data (processed data)
 	|-- Network Visualization.ipynb (Notebook for visualization)
 	|-- scripts
-	  --dataset.py 
+	  -- run.sh(shell scripts for running gridsearch experiments)
+	  -- dataset.py 
 	  -- train.py 
 	  -- model.py
 	  -- utils.py
@@ -21,13 +22,13 @@ In  this  project, we  use  the  link prediction based on the bipartite graph th
 
 
 ## Guideline to run our code:
-### STEP 1: install required packages
+### STEP 1: Install required packages
 ```bash
 pip: pip install -r requirements.txt   
 conda: conda env create -f environment. yaml
 ```
 
-### STEP 2: run code
+### STEP 2: Run code
 ```bash
 python3 scripts/train.py --rate_num 5 \
 			--lr 0.01 \
