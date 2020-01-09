@@ -6,11 +6,14 @@
 	|-- ml-100k (dataset)
 	|-- weights (saved model weights)
 	|-- text (grid search text and ablation study results)
-	|-- dataset.py 
-	|-- train.py 
-	|-- model.py
-	|-- utils.py
-	|-- loss.py
+	|-- data (processed data)
+	|-- Network Visualization.ipynb (Notebook for visualization)
+	|-- scripts
+	  --dataset.py 
+	  -- train.py 
+	  -- model.py
+	  -- utils.py
+	  -- loss.py
 
 ## Introduction of our project
 In  this  project, we  use  the  link prediction based on the bipartite graph that represents therelationship  between  the  user  and  item.  The  message  passing by  graph  convolution  allows  us  to  describe  users  using  items’ information, and vice versa. The rating prediction is forced to fit  the  user  graph  and  item graph, such that the normalizedLaplacian is used to compute  the Dirichlet norms as the regularization term. The experiment has shown that our model can  reach  a  lowest  RMSE  around **0.938**.  Even  without  any  use  of side  features,  the  RMSE  can  still  stay  below **0.95**.
@@ -26,24 +29,24 @@ conda: conda env create -f environment. yaml
 
 ### STEP 2: run code
 ```bash
-python3 train.py --rate_num 5 \
-                --lr 0.01 \
-                --weight_decay 0.00001 \
-                --num_epochs 1000 \
-                --hidden_dim 5 \
-                --side_hidden_dim 5 \
-                --out_dim 5 \
-                --drop_out 0.0 \
-                --split_ratio 0.8 \
-                --save_steps 100 \
-                --log_dir './log' \
-                --saved_model_folder './weights' \
-                --dataset_path './ml-100k' \
-                --save_processed_data_path './processed_dataset' \
-                --use_side_feature 1 \
-                --use_data_whitening 1 \
-                --use_laplacian_loss 1 \
-                --laplacian_loss_weight 0.05
+python3 scripts/train.py --rate_num 5 \
+			--lr 0.01 \
+			--weight_decay 0.00001 \
+			--num_epochs 1000 \
+			--hidden_dim 5 \
+			--side_hidden_dim 5 \
+			--out_dim 5 \
+			--drop_out 0.0 \
+			--split_ratio 0.8 \
+			--save_steps 100 \
+			--log_dir './log' \
+			--saved_model_folder './weights' \
+			--dataset_path './ml-100k' \
+			--save_processed_data_path './data' \
+			--use_side_feature 1 \
+			--use_data_whitening 1 \
+			--use_laplacian_loss 1 \
+			--laplacian_loss_weight 0.05
 ```
 You can observe the loss curve through the training by runing:
 ```bash
