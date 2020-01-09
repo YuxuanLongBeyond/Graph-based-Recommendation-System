@@ -25,7 +25,7 @@ In  this  project, we  use  the  link prediction based on the bipartite graph th
 ### STEP 1: Install required packages
 ```bash
 pip: pip install -r requirements.txt   
-conda: conda env create -f environment. yaml
+conda: conda env create -f environment.yaml
 ```
 
 ### STEP 2: Run code
