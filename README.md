@@ -12,6 +12,11 @@
 	|-- utils.py
 	|-- loss.py
 
+## Introduction of our project
+In  this  project, we  use  the  link prediction based on the bipartite graph that represents therelationship  between  the  user  and  item.  The  message  passing by  graph  convolution  allows  us  to  describe  users  using  items’ information, and vice versa. The rating prediction is forced to fit  the  user  graph  and  item graph, such that the normalizedLaplacian is used to compute  the Dirichlet norms as the regularization term. The experiment has shown that our model can  reach  a  lowest  RMSE  around **0.938**.  Even  without  any  use  of side  features,  the  RMSE  can  still  stay  below **0.95**.
+
+
+
 ## Guideline to run our code:
 ### STEP 1: install required packages
 ```bash
