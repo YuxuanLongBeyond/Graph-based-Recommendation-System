@@ -21,14 +21,22 @@ In  this  project, we  use  the  link prediction based on the bipartite graph th
 
 
 
-## Guideline to run our code:
-### STEP 1: Install required packages
+## Prerequiste of packages for our model:
 ```bash
-pip: pip install -r requirements.txt   
-conda: conda env create -f environment.yaml
+
+python==3.7
+pandas==0.24.2
+matplotlib==2.2.2
+argparse==1.1
+tqdm==4.31.1
+tensorboardX==1.7
+numpy==1.17.3
+torch==1.3.1
+networkx==2.4
+folium==0.10.1
 ```
 
-### STEP 2: Run code
+## Running the model
 ```bash
 python3 scripts/train.py --rate_num 5 \
 			--lr 0.01 \
